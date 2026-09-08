@@ -99,7 +99,7 @@ Technically yes: Replit runs Node.js and WebSockets, and a `.replit` file is inc
 | [Railway](https://railway.com) | Trial credit, then usage-based (roughly $5/month for a small service) | WebSockets on all plans. Auto-detects the Dockerfile. |
 | [Fly.io](https://fly.io) | Pay as you go, card required | `fly.toml` included: `fly launch --copy-config && fly deploy`. Scales to zero when idle. |
 | [Heroku](https://heroku.com) | No (Eco dynos are about $5/month) | `app.json` included for the deploy button. |
-| GitHub Codespaces | 60 core-hours per month on personal accounts | Run `npm i && npm start`, set the forwarded port's visibility to **Public**. Same steps as upstream. |
+| GitHub Codespaces | 120 core-hours per month on a free personal account, which is 60 hours on the default 2-core machine | Good for trying it out, not for permanent hosting: the codespace stops after 30 minutes of inactivity. See below. |
 | Any VPS (Oracle Cloud Always Free, Hetzner, DigitalOcean, a Raspberry Pi at home) | Depends | `docker build -t interstellar . && docker run -p 8080:8080 interstellar`, put Caddy or a Cloudflare Tunnel in front for HTTPS. |
 
 <a target="_blank" href="https://render.com/deploy?repo=https://github.com/frankfurt-debug/empty-template"><img alt="Deploy to Render" src="https://render.com/images/deploy-to-render-button.svg" height="32"></a>
@@ -107,6 +107,31 @@ Technically yes: Replit runs Node.js and WebSockets, and a `.replit` file is inc
 <a target="_blank" href="https://heroku.com/deploy/?template=https://github.com/frankfurt-debug/empty-template"><img alt="Deploy to Heroku" src="https://www.herokucdn.com/deploy/button.svg" height="32"></a>
 
 Hosts that have shut down or no longer suit this: Glitch ended app hosting in 2025, Cyclic closed in 2024, and Vercel/Netlify functions cannot hold a WebSocket open.
+
+### Running on GitHub Codespaces
+
+Codespaces gives you a Node process and an HTTPS URL for free, which is everything this server needs. The one step you cannot skip is making the forwarded port **public**.
+
+1. **Create the codespace on this branch.** On the repository page click **Code → Codespaces → ⋯ → New with options…**, set Branch to `claude/interstellar-websocket-html-vwqd4z`, and create it. (Creating one straight from the green button uses the default branch instead.)
+2. **Start the server** in the codespace terminal:
+
+   ```bash
+   npm install
+   npm start
+   ```
+
+   The `PORT` variable is already set by the platform where it matters; locally it defaults to 8080.
+3. **Make the port public.** Open the **Ports** tab next to the terminal, right-click port 8080, and choose **Port Visibility → Public**.
+
+   This is required, not optional. A private forwarded port demands a GitHub token on every request, so the service worker, the frame shell and the WebSocket all fail with 401s and the client just shows "Offline". If the Ports tab is empty, or the URL 404s on first boot, toggling visibility off and on refreshes the forwarding.
+4. **Open the URL**, which looks like `https://<codespace-name>-8080.app.github.dev`. That serves the same single-file client, and because GitHub terminates TLS for you the service worker requirement is satisfied.
+
+To use the HTML file from your own machine instead, open `client/interstellar.html` and paste that `https://…app.github.dev` address into the connect dialog. Both work; loading it from the codespace URL is the more browser-compatible of the two.
+
+Two things worth knowing:
+
+- **A public port is genuinely public.** Anyone who has the URL can use your proxy while the codespace is running. If that matters, turn on password protection: `CHALLENGE=true PASSWORD=something-long npm start`.
+- **The codespace stops after 30 minutes of inactivity** (default, adjustable in your Codespaces settings), and the URL changes each time you create a new one. Use one of the always-on hosts above if you want a stable address.
 
 Whatever you pick, check the host's acceptable-use policy. Several platforms treat web proxies and "unblockers" as prohibited content and will remove them.
 
