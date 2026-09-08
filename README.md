@@ -68,6 +68,16 @@ Scramjet does emulate the things a page checks casually: a page's own scripts se
 
 Use this on networks where you are allowed to.
 
+## Site compatibility
+
+Most sites work. The ones that do not usually fail for one of these reasons, and they are worth recognising before you go hunting for a bug:
+
+- **Games needing `SharedArrayBuffer`.** Threaded Unity and Godot builds require the page to be cross-origin isolated, which needs COOP/COEP headers on the real site's own origin. Through any proxy `crossOriginIsolated` is `false` and `SharedArrayBuffer` is `undefined`, so those titles will not start. Nothing can be done about this short of the site cooperating.
+- **Cloudflare and bot checks.** Requests arrive from the server's datacenter IP, which draws CAPTCHAs and outright 403s on protected sites.
+- **Popups.** The frame is sandboxed without `allow-popups`, so a page cannot open real browser windows. `window.open` is intercepted and becomes a new tab in the client instead, including relative paths like `/game/xyz`, which is how most portals launch a game.
+
+When something misbehaves, open the tab toolbar's inspect button and read the console inside the page — that is the fastest way to tell a blocked request apart from a rewriting bug.
+
 ## Password protection
 
 Set `challenge: true` in `config.js`, or start with `CHALLENGE=true npm start` (upstream's `config=true npm start` works too). Users and passwords live in `config.js`; `PASSWORD=...` overrides the default user's password.

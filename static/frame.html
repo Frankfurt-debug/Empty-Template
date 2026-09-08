@@ -230,12 +230,35 @@
         post({ type: "state", url, title, loading: false });
       }
 
+      // The site URL currently being viewed, used as the base for relative links.
+      function currentRealUrl() {
+        try {
+          const href = inner.contentDocument?.location.href;
+          if (href && href !== "about:blank") return decode(href);
+        } catch {}
+        return inner.dataset.tabUrl || null;
+      }
+
+      function absolute(url) {
+        const raw = String(url);
+        const base = currentRealUrl();
+        try {
+          return base ? new URL(raw, base).toString() : raw;
+        } catch {
+          return raw;
+        }
+      }
+
       function hookInner() {
         try {
           const win = inner.contentWindow;
-          if (!win) return;
+          if (!win || win.__isOpenHooked) return;
+          win.__isOpenHooked = true;
+          // Portals commonly launch a game with window.open, often with a path
+          // like "/game/xyz". Resolve it against the site being viewed and hand
+          // it to the client as a new tab.
           win.open = url => {
-            if (url) post({ type: "open", url: String(url) });
+            if (url) post({ type: "open", url: absolute(url) });
             return null;
           };
         } catch {
@@ -247,6 +270,9 @@
         hookInner();
         readState(true);
       });
+      // A page's own inline scripts run before "load", so poll briefly after a
+      // navigation to install the window.open hook as early as possible.
+      setInterval(hookInner, 120);
       setInterval(() => readState(false), 750);
 
       function toggleInspect() {
