@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="referrer" content="no-referrer" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #222; color: #fff; font-family: "Inter", system-ui, sans-serif; overflow: hidden; }
+    iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: #fff; }
+    #status { position: fixed; inset: 0; display: grid; place-items: center; text-align: center; padding: 2rem; background: #222; }
+    #status[hidden] { display: none; }
+    #status p { max-width: 36rem; line-height: 1.5; color: #ccc; }
+    #status h2 { margin: 0 0 .5rem; }
+    #status button, #status a { display: inline-block; margin: .35rem; padding: .6rem 1.1rem; border-radius: 8px; border: 0; background: #444; color: #fff; text-decoration: none; cursor: pointer; font: inherit; }
+    #status button:hover, #status a:hover { background: #555; }
+    .spinner { width: 34px; height: 34px; border: 3px solid #444; border-top-color: #fff; border-radius: 50%; animation: spin .9s linear infinite; margin: 0 auto 1rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div id="status">
+    <div>
+      <div class="spinner" id="spinner"></div>
+      <h2 id="status-title">Starting proxy engine…</h2>
+      <p id="status-text"></p>
+      <div id="status-actions"></div>
+    </div>
+  </div>
+  <iframe id="inner" title="content" allow="fullscreen; autoplay; clipboard-read; clipboard-write; gamepad; microphone; camera; geolocation; encrypted-media; picture-in-picture"
+    sandbox="allow-same-origin allow-scripts allow-forms allow-pointer-lock allow-modals allow-orientation-lock allow-presentation allow-storage-access-by-user-activation allow-downloads"></iframe>
+
+  <script src="/assets/mathematics/bundle.js?v=2025-04-15"></script>
+  <script src="/assets/mathematics/config.js?v=2025-04-15"></script>
+  <script src="/assets/languagearts/sj.all.js?v=2025-04-15"></script>
+  <script>
+    /*
+     * Frame shell.
+     *
+     * This page runs on the proxy server's origin. It registers the service
+     * worker, wires the bare-mux transport to the wisp websocket, and hosts
+     * the proxied page in an inner iframe. The standalone HTML client embeds
+     * one of these per tab and talks to it with postMessage, so features
+     * that need same-origin access to the proxied document (inspect element,
+     * back/forward, title/url readout, window.open interception) keep
+     * working even though the client itself lives on another origin.
+     */
+    (() => {
+      const params = new URLSearchParams(location.search);
+      const token = params.get("token");
+      const initialUrl = params.get("url");
+      let engine = params.get("engine") || "sj";
+      const inner = document.getElementById("inner");
+      const status = document.getElementById("status");
+      const statusTitle = document.getElementById("status-title");
+      const statusText = document.getElementById("status-text");
+      const statusActions = document.getElementById("status-actions");
+      const spinner = document.getElementById("spinner");
+      const parentWindow = window.parent !== window ? window.parent : null;
+      let sj = null;
+      let ready = false;
+      let pending = null;
+      let lastState = "";
+
+      const post = message => {
+        if (parentWindow) parentWindow.postMessage({ source: "interstellar-frame", ...message }, "*");
+      };
+
+      const showStatus = (title, text, actions = [], spin = actions.length === 0) => {
+        status.hidden = false;
+        spinner.hidden = !spin;
+        statusTitle.textContent = title;
+        statusText.textContent = text;
+        statusActions.innerHTML = "";
+        for (const action of actions) {
+          const el = document.createElement(action.href ? "a" : "button");
+          el.textContent = action.label;
+          if (action.href) {
+            el.href = action.href;
+            el.target = "_blank";
+            el.rel = "noopener";
+          } else {
+            el.onclick = action.onClick;
+          }
+          statusActions.appendChild(el);
+        }
+      };
+
+      const wispUrl = () => {
+        const protocol = location.protocol === "https:" ? "wss" : "ws";
+        const query = token ? `?token=${encodeURIComponent(token)}` : "";
+        return `${protocol}://${location.host}/wisp/${query}`;
+      };
+
+      const topLevelUrl = () => {
+        const u = new URL(location.href);
+        return u.toString();
+      };
+
+      async function boot() {
+        try {
+          if (!("serviceWorker" in navigator)) {
+            throw new Error("Service workers are not available here (this needs HTTPS, or http://localhost).");
+          }
+          const sjConfig = {
+            prefix: "/a/sj/",
+            files: {
+              wasm: "/assets/languagearts/sj.wasm.wasm",
+              all: "/assets/languagearts/sj.all.js",
+              sync: "/assets/languagearts/sj.sync.js",
+            },
+            flags: { rewriterLogs: false, scramitize: false, cleanErrors: true, sourcemaps: true },
+          };
+          const [{ BareMuxConnection }, { ScramjetController }] = await Promise.all([
+            import("/bm/index.mjs"),
+            Promise.resolve(window.$scramjetLoadController()),
+          ]);
+          // Initialise the controller (writes its config to IndexedDB) before the
+          // service worker starts, exactly like the upstream pages do; the worker
+          // opens the same database and must find the config store in place.
+          sj = new ScramjetController(sjConfig);
+          await sj.init();
+
+          // This page lives outside the /a/ scope, so navigator.serviceWorker.ready
+          // would never resolve here; wait on the registration itself instead.
+          const registration = await navigator.serviceWorker.register("/sw.js?v=2025-04-15", { scope: "/a/" });
+          await new Promise((resolve, reject) => {
+            const worker = registration.active || registration.waiting || registration.installing;
+            if (!worker) return reject(new Error("Service worker did not install"));
+            if (worker.state === "activated") return resolve();
+            const timer = setTimeout(() => reject(new Error("Service worker took too long to activate")), 20000);
+            worker.addEventListener("statechange", () => {
+              if (worker.state === "activated") { clearTimeout(timer); resolve(); }
+              if (worker.state === "redundant") { clearTimeout(timer); reject(new Error("Service worker became redundant")); }
+            });
+          });
+
+          const connection = new BareMuxConnection("/bm/worker.js");
+          await connection.setTransport("/ep/index.mjs", [{ wisp: wispUrl() }]);
+
+          ready = true;
+          status.hidden = true;
+          post({ type: "ready", engine });
+          if (pending) {
+            const next = pending;
+            pending = null;
+            navigate(next.url, next.engine);
+          } else if (initialUrl) {
+            navigate(initialUrl, engine);
+          } else {
+            showStatus("New Tab", "Search or enter a URL in the bar above.", [], false);
+          }
+        } catch (error) {
+          console.error("Frame shell failed to start:", error);
+          const blocked = /SecurityError|storage|denied|not allowed/i.test(String(error));
+          const actions = [];
+          if (blocked && parentWindow && document.requestStorageAccess) {
+            actions.push({
+              label: "Allow storage and retry",
+              onClick: async () => {
+                try {
+                  await document.requestStorageAccess();
+                  location.reload();
+                } catch (e) {
+                  showStatus("Still blocked", String(e), actions);
+                }
+              },
+            });
+          }
+          actions.push({ label: "Open in a new tab", href: topLevelUrl() });
+          showStatus(
+            blocked ? "Your browser blocked the proxy engine inside this frame" : "Proxy engine failed to start",
+            blocked
+              ? "Some browsers (Safari, Firefox strict mode, or Chrome with third-party cookies blocked) refuse to run a service worker inside an embedded frame from another site. Grant storage access, open this page in its own tab, or load the client from the proxy server itself."
+              : String(error.message || error),
+            actions,
+          );
+          post({ type: "error", code: blocked ? "storage-blocked" : "engine", message: String(error.message || error), open: topLevelUrl() });
+        }
+      }
+
+      function encode(url, useEngine) {
+        if (url.startsWith("/")) return url; // local asset served by this server
+        if (useEngine === "uv") return `/a/${__uv$config.encodeUrl(url)}`;
+        if (useEngine === "dy") return `/a/q/${__uv$config.encodeUrl(url)}`;
+        return sj.encodeUrl(url);
+      }
+
+      function decode(href) {
+        try {
+          const u = new URL(href);
+          if (u.origin !== location.origin) return href;
+          const p = u.pathname + u.search + u.hash;
+          if (p.startsWith("/a/sj/")) return sj ? sj.decodeUrl(href) : href;
+          if (p.startsWith("/a/q/")) return __uv$config.decodeUrl(p.slice(5).split("?")[0]);
+          if (p.startsWith("/a/")) return __uv$config.decodeUrl(p.slice(3).split("?")[0]);
+          return p;
+        } catch {
+          return href;
+        }
+      }
+
+      function navigate(url, useEngine) {
+        if (useEngine) engine = useEngine;
+        if (!ready) {
+          pending = { url, engine };
+          return;
+        }
+        status.hidden = true;
+        inner.src = encode(url, engine);
+        inner.dataset.tabUrl = url;
+        post({ type: "state", url, title: "", loading: true });
+      }
+
+      function readState(force) {
+        let title = "";
+        let href = "";
+        try {
+          const doc = inner.contentDocument;
+          if (!doc || doc.location.href === "about:blank") return;
+          title = doc.title || "";
+          href = doc.location.href;
+        } catch {
+          return;
+        }
+        const url = decode(href);
+        const key = `${title} ${url}`;
+        if (!force && key === lastState) return;
+        lastState = key;
+        post({ type: "state", url, title, loading: false });
+      }
+
+      function hookInner() {
+        try {
+          const win = inner.contentWindow;
+          if (!win) return;
+          win.open = url => {
+            if (url) post({ type: "open", url: String(url) });
+            return null;
+          };
+        } catch {
+          /* cross-origin content (should not happen, but be safe) */
+        }
+      }
+
+      inner.addEventListener("load", () => {
+        hookInner();
+        readState(true);
+      });
+      setInterval(() => readState(false), 750);
+
+      function toggleInspect() {
+        let win;
+        let doc;
+        try {
+          win = inner.contentWindow;
+          doc = inner.contentDocument;
+        } catch {
+          return;
+        }
+        if (!win || !doc) return;
+        if (win.eruda) {
+          if (win.eruda._isInit) win.eruda.destroy();
+          return;
+        }
+        const script = doc.createElement("script");
+        script.src = "https://cdn.jsdelivr.net/npm/eruda";
+        script.onload = () => {
+          if (!win.eruda) return;
+          win.eruda.init();
+          win.eruda.show();
+        };
+        doc.head.appendChild(script);
+      }
+
+      function fullscreen() {
+        try {
+          const doc = inner.contentDocument;
+          if (doc.fullscreenElement) doc.exitFullscreen();
+          else doc.documentElement.requestFullscreen();
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      function exportStorage() {
+        const localStorageObj = {};
+        for (const key of Object.keys(localStorage)) localStorageObj[key] = localStorage.getItem(key);
+        const cookies = {};
+        for (const part of document.cookie.split("; ")) {
+          const [name, ...rest] = part.split("=");
+          if (name) cookies[name] = rest.join("=");
+        }
+        return { cookies, localStorage: localStorageObj };
+      }
+
+      function importStorage(data) {
+        if (data?.cookies) {
+          for (const [key, value] of Object.entries(data.cookies)) document.cookie = `${key}=${value}; path=/`;
+        }
+        if (data?.localStorage) {
+          for (const [key, value] of Object.entries(data.localStorage)) localStorage.setItem(key, value);
+        }
+      }
+
+      window.addEventListener("message", event => {
+        if (!parentWindow || event.source !== parentWindow) return;
+        const msg = event.data;
+        if (!msg || msg.source !== "interstellar-client") return;
+        switch (msg.type) {
+          case "navigate":
+            return navigate(String(msg.url), msg.engine);
+          case "back":
+            try { inner.contentWindow.history.back(); } catch {}
+            return;
+          case "forward":
+            try { inner.contentWindow.history.forward(); } catch {}
+            return;
+          case "reload":
+            try { inner.contentWindow.location.reload(); } catch { inner.src = inner.src; }
+            return;
+          case "inspect":
+            return toggleInspect();
+          case "fullscreen":
+            return fullscreen();
+          case "getState":
+            return readState(true);
+          case "currentSrc": {
+            let href = "";
+            try { href = inner.contentDocument?.location.href || ""; } catch {}
+            return post({ type: "currentSrc", href, id: msg.id });
+          }
+          case "exportStorage":
+            return post({ type: "storage", id: msg.id, data: exportStorage() });
+          case "importStorage":
+            importStorage(msg.data);
+            return post({ type: "storageImported", id: msg.id });
+          default:
+            return;
+        }
+      });
+
+      post({ type: "hello" });
+      boot();
+    })();
+  </script>
+</body>
+</html>

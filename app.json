@@ -1,0 +1,11 @@
+{
+  "name": "interstellar-websocket",
+  "description": "Interstellar web proxy with a standalone WebSocket-driven HTML frontend",
+  "repository": "https://github.com/frankfurt-debug/empty-template",
+  "logo": "https://avatars.githubusercontent.com/u/103917385",
+  "keywords": [
+    "school",
+    "math"
+  ],
+  "image": "heroku/nodejs"
+}

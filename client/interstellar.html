@@ -1,0 +1,1277 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="referrer" content="no-referrer" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="shortcut icon" id="tab-favicon" href="data:," />
+  <title id="t">Home</title>
+  <style>
+    :root {
+      --background-image: none;
+      --backdrop-filter: blur(10px) brightness(80%);
+      --background-nav: rgba(255, 255, 255, 0.02);
+      --background-color: #222;
+      --background-input: #4545459e;
+      --background-column: #353535;
+      --background-settings: #2a2a2a;
+      --background-buttons: #333;
+      --tab-active-background: #444;
+      --slider-active-background: #4caf50;
+      --slider-inactive-background: #ccc;
+      --text-primary: #fff;
+      --text-dark: #555;
+      --text-placeholder: #aaa;
+      --accent: #cba6f7;
+      --accent-hover: #89b4fa;
+      --save-button: #4caf50;
+      --reset-button: #f44336;
+      --import-button: #009688;
+      --export-button: #ea76cb;
+      --ok: #4caf50;
+      --warn: #ffb347;
+      --bad: #f44336;
+    }
+    [data-theme="Inverted"] {
+      --background-nav: rgba(0, 0, 0, 0.02); --background-color: #ddd; --background-input: #cccccc; --background-column: #cacaca;
+      --background-settings: #d5d5d5; --background-buttons: #ccc; --tab-active-background: #bbb; --slider-active-background: #b3b0af;
+      --slider-inactive-background: #333; --text-primary: #000; --text-dark: #aaa; --text-placeholder: #555; --accent: #333; --accent-hover: #000;
+    }
+    [data-theme="sky"] {
+      --background-nav: #173055; --background-color: #173055; --background-input: #4a6fa5; --background-column: #173055; --background-settings: #173055;
+      --background-buttons: #3665ac; --tab-active-background: #204a88; --slider-active-background: #204a88; --slider-inactive-background: #204a88;
+      --text-primary: #ffffff; --text-dark: #1b50cc; --text-placeholder: #00d9ff; --accent: #8fd3ff; --accent-hover: #fff;
+    }
+    [data-theme="catppuccinMocha"] {
+      --background-image: none; --background-color: #1e1e2e; --background-input: #313244; --background-column: #11111b; --background-settings: #181825;
+      --background-buttons: #313244; --tab-active-background: #181825; --text-primary: #cdd6f4; --text-placeholder: #a6adc8; --text-dark: #45475a; --accent: #cba6f7; --accent-hover: #89b4fa;
+    }
+    [data-theme="catppuccinMacchiato"] {
+      --background-image: none; --background-color: #24273a; --background-input: #363a4f; --background-column: #181926; --background-settings: #1e2030;
+      --background-buttons: #363a4f; --tab-active-background: #1e2030; --text-primary: #cad3f5; --text-placeholder: #a5adcb; --text-dark: #494d64; --accent: #c6a0f6; --accent-hover: #8aadf4;
+    }
+    [data-theme="catppuccinFrappe"] {
+      --background-image: none; --background-color: #303446; --background-input: #414559; --background-column: #232634; --background-settings: #292c3c;
+      --background-buttons: #414559; --tab-active-background: #292c3c; --text-primary: #c6d0f5; --text-placeholder: #a5adce; --text-dark: #51576d; --accent: #ca9ee6; --accent-hover: #8caaee;
+    }
+    [data-theme="catppuccinLatte"] {
+      --background-image: none; --background-color: #eff1f5; --background-input: #ccd0da; --background-column: #dce0e8; --background-settings: #e6e9ef;
+      --background-buttons: #ccd0da; --tab-active-background: #e6e9ef; --text-primary: #4c4f69; --text-placeholder: #6c6f85; --text-dark: #bcc0cc; --accent: #8839ef; --accent-hover: #1e66f5;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+      color: var(--text-primary);
+      background: var(--background-image) center / cover no-repeat fixed, var(--background-color);
+      min-height: 100vh;
+    }
+    body.in-tabs { overflow: hidden; }
+    ::placeholder { color: var(--text-placeholder); opacity: 1; }
+    ::-webkit-scrollbar { width: 6px; background: var(--background-color); }
+    ::-webkit-scrollbar-thumb { border-radius: 10px; background: var(--text-primary); }
+    a { color: var(--accent); }
+    button, input, select { font: inherit; }
+    svg.i { width: 1.1em; height: 1.1em; fill: currentColor; vertical-align: -0.15em; }
+    [hidden] { display: none !important; }
+
+    /* Top navigation */
+    .f-nav {
+      position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between;
+      padding: .6rem 1.2rem; background: var(--background-nav); -webkit-backdrop-filter: var(--backdrop-filter); backdrop-filter: var(--backdrop-filter);
+    }
+    .f-nav .icon img { height: 38px; width: 38px; object-fit: contain; }
+    .f-nav .icon { display: inline-flex; align-items: center; gap: .6rem; color: var(--text-primary); text-decoration: none; font-weight: 800; letter-spacing: .04em; }
+    .f-nav-right { display: flex; gap: 1.3rem; align-items: center; }
+    .f-nav-right a { color: var(--text-primary); text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: .4rem; transition: .2s; opacity: .85; }
+    .f-nav-right a:hover, .f-nav-right a.active { opacity: 1; transform: translateY(-1px); color: var(--accent); }
+    .conn { display: inline-flex; align-items: center; gap: .45rem; font-size: .8rem; opacity: .85; cursor: pointer; padding: .3rem .6rem; border-radius: 999px; background: var(--background-buttons); }
+    .conn .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--bad); box-shadow: 0 0 6px currentColor; }
+    .conn[data-state="connecting"] .dot { background: var(--warn); }
+    .conn[data-state="online"] .dot { background: var(--ok); }
+
+    /* Views */
+    .view { display: none; }
+    .view.active { display: block; }
+    #view-home.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+    /* Home */
+    #view-home { min-height: calc(100vh - 60px); text-align: center; padding: 0 1rem 4rem; }
+    .title { font-size: 10vh; text-transform: uppercase; margin: 22vh 0 1vh; transition: .35s ease; text-shadow: 2px 4px 6px rgba(0,0,0,.2); font-weight: 300; letter-spacing: .02em; }
+    .title:hover { transform: translateY(-5%) scale(1.03); font-weight: 800; }
+    @media (orientation: portrait) { .title { font-size: 11vw; margin-top: 18vh; } }
+    #splash { margin: 0 0 3vh; opacity: .8; cursor: pointer; user-select: none; }
+    .search-container { display: flex; justify-content: center; width: 100%; }
+    .truncate {
+      width: min(50vw, 720px); min-width: 260px; height: 5vh; min-height: 48px; padding: 0 20px; border-radius: 8px; border: 0; outline: 0; text-align: center; font-size: 16px;
+      color: var(--text-primary); background: var(--background-input); box-shadow: 0 0 15px 2px rgba(0,0,0,.2); -webkit-backdrop-filter: var(--backdrop-filter); backdrop-filter: var(--backdrop-filter); transition: .4s;
+    }
+    .truncate:focus { box-shadow: 0 0 15px 4px rgba(0,0,0,.35); }
+    .hint { opacity: .6; font-size: .85rem; margin-top: 1.2rem; }
+
+    /* App / game grids */
+    .input-c { display: flex; flex-wrap: wrap; justify-content: center; gap: .5em; margin-top: 90px; padding: 0 1rem; }
+    .input-c input, .input-c select { padding: 16px 20px; border-radius: 6px; border: 0; outline: 0; background: var(--background-column); color: var(--text-primary); font-size: 18px; }
+    .input-c input { width: min(550px, 90vw); text-align: center; }
+    .input-c select { cursor: pointer; }
+    .apps, .pinned { display: flex; flex-wrap: wrap; justify-content: center; gap: 2.3em; margin-top: 30px; padding: 0 1rem 4rem; }
+    .pinned:empty { display: none; }
+    .pinned-label { text-align: center; margin: 28px 0 -18px; opacity: .7; font-size: .9rem; letter-spacing: .1em; text-transform: uppercase; }
+    .column { width: 145px; position: relative; cursor: pointer; background: var(--background-column); border-radius: 8px; padding: 5px 10px 12px; transition: all .2s ease; }
+    .column:hover { transform: scale(1.15); z-index: 2; }
+    .column img { display: block; width: 145px; height: 145px; border-radius: 10px; object-fit: cover; margin-left: -10px; background: rgba(0,0,0,.2); }
+    .column p { margin: 8px 0 0; font-weight: 800; font-size: 15px; line-height: 19px; text-align: center; height: 38px; overflow: hidden; text-shadow: 0 0 30px rgba(0,0,0,.5); }
+    .column .pin { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 50%; border: 0; background: rgba(45,45,45,.85); color: #fff; cursor: pointer; opacity: 0; transition: .2s; display: grid; place-items: center; }
+    .column:hover .pin, .column.pinned-item .pin { opacity: 1; }
+    .column.pinned-item .pin { color: var(--accent); }
+    .column .badge { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,.65); color: #fff; font-size: .65rem; padding: .15rem .4rem; border-radius: 4px; }
+    .empty { text-align: center; opacity: .7; padding: 4rem 1rem; }
+
+    /* Tabs view */
+    #view-tabs { position: fixed; inset: 0; display: none; flex-direction: column; background: var(--background-color); z-index: 40; }
+    #view-tabs.active { display: flex; }
+    .tab-strip { display: flex; align-items: center; gap: .35rem; padding: .45rem .6rem 0; overflow-x: auto; }
+    .tab-strip.collapsed { display: none; }
+    #tab-list { list-style: none; margin: 0; padding: 0; display: flex; gap: .35rem; }
+    #tab-list li { display: flex; align-items: center; gap: .4rem; max-width: 220px; padding: .45rem .7rem; border-radius: 8px 8px 0 0; background: var(--background-buttons); cursor: pointer; font-size: .85rem; white-space: nowrap; opacity: .7; }
+    #tab-list li.active { background: var(--tab-active-background); opacity: 1; }
+    #tab-list li span.t { overflow: hidden; text-overflow: ellipsis; }
+    #tab-list li .close-tab { border: 0; background: none; color: inherit; cursor: pointer; padding: 0 .1rem; font-size: .8rem; opacity: .7; }
+    #tab-list li .close-tab:hover { opacity: 1; }
+    #add-tab { border: 0; background: var(--background-buttons); color: var(--text-primary); border-radius: 8px; width: 32px; height: 32px; cursor: pointer; display: grid; place-items: center; }
+    .nav-bar { display: flex; align-items: center; gap: .25rem; padding: .4rem .6rem; background: var(--tab-active-background); }
+    .nav-button { border: 0; background: none; color: var(--text-primary); border-radius: 8px; width: 36px; height: 36px; cursor: pointer; display: grid; place-items: center; transition: .2s; }
+    .nav-button:hover { transform: scale(1.2); }
+    .nav-bar form { flex: 1; display: flex; margin: 0 .5rem; }
+    .bar { flex: 1; border: 0; outline: 0; border-radius: 6px; padding: .5rem .9rem; color: var(--text-primary); background: var(--background-input); transition: .3s; }
+    .bar:focus { background: var(--background-buttons); }
+    .frame-container { flex: 1; position: relative; background: #fff; }
+    .frame-container iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: none; }
+    .frame-container iframe.active { display: block; }
+    .frame-note { position: absolute; left: 50%; bottom: 1rem; transform: translateX(-50%); background: rgba(0,0,0,.85); color: #fff; padding: .6rem 1rem; border-radius: 8px; font-size: .85rem; max-width: 90%; display: flex; gap: .8rem; align-items: center; }
+    .frame-note a { color: #8fd3ff; }
+    body.fullscreen .tab-strip, body.fullscreen .nav-bar { display: none; }
+
+    /* Settings */
+    .settings-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.2rem; max-width: 1200px; margin: 80px auto 4rem; padding: 0 1.2rem; }
+    .settings-card { background: var(--background-settings); border-radius: 12px; padding: 1.2rem 1.4rem; box-shadow: 0 6px 24px rgba(0,0,0,.15); }
+    .settings-card h3 { margin: 0 0 .4rem; }
+    .settings-card p { margin: 0 0 .8rem; opacity: .8; font-size: .92rem; line-height: 1.45; }
+    .settings-card p.small { font-size: .8rem; }
+    .key-form, .settings-card select { width: 100%; padding: .7rem .9rem; margin: .3rem 0; border: 0; border-radius: 6px; outline: 0; background: var(--background-buttons); color: var(--text-primary); }
+    .key-button { display: inline-block; padding: .6rem 1rem; margin: .4rem .4rem .1rem 0; border: 0; border-radius: 6px; background: var(--background-buttons); color: var(--text-primary); cursor: pointer; transition: .2s; }
+    .key-button:hover { filter: brightness(1.15); transform: translateY(-1px); }
+    .key-button.save { background: var(--save-button); color: #fff; }
+    .key-button.reset { background: var(--reset-button); color: #fff; }
+    .key-button.import { background: var(--import-button); color: #fff; }
+    .key-button.export { background: var(--export-button); color: #fff; }
+    .switch { position: relative; display: inline-block; width: 52px; height: 28px; vertical-align: middle; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider-round { position: absolute; inset: 0; cursor: pointer; background: var(--slider-inactive-background); border-radius: 28px; transition: .3s; }
+    .slider-round::before { content: ""; position: absolute; width: 20px; height: 20px; left: 4px; bottom: 4px; background: #fff; border-radius: 50%; transition: .3s; }
+    input:checked + .slider-round { background: var(--slider-active-background); }
+    input:checked + .slider-round::before { transform: translateX(24px); }
+    .row { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; }
+    code { background: rgba(0,0,0,.25); padding: .1rem .35rem; border-radius: 4px; font-size: .85em; }
+    #warning { color: var(--reset-button); }
+    .status-line { font-size: .85rem; opacity: .85; margin-top: .5rem; }
+
+    /* Connect modal + banners */
+    .modal { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: rgba(0,0,0,.6); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); padding: 1rem; }
+    .modal .settings-card { width: min(460px, 100%); }
+    .modal h2 { margin: 0 0 .3rem; }
+    .banner { position: fixed; left: 50%; bottom: 1.2rem; transform: translateX(-50%); z-index: 90; background: var(--background-settings); color: var(--text-primary); padding: .8rem 1.1rem; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.35); display: flex; gap: .8rem; align-items: center; max-width: 92vw; font-size: .9rem; }
+    .banner button { white-space: nowrap; }
+    #particles { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <canvas id="particles" hidden></canvas>
+
+  <header class="f-nav" id="f-nav">
+    <a class="icon" href="#/"><img id="INImg" alt="" src="data:," /><span>Interstellar</span></a>
+    <nav class="f-nav-right">
+      <a href="#/games" data-view="games"><svg class="i"><use href="#i-gamepad"/></svg>Games</a>
+      <a href="#/apps" data-view="apps"><svg class="i"><use href="#i-phone"/></svg>Apps</a>
+      <a href="#/tabs" data-view="tabs"><svg class="i"><use href="#i-laptop"/></svg>Tabs</a>
+      <a href="#/settings" data-view="settings"><svg class="i"><use href="#i-gear"/></svg>Settings</a>
+      <span class="conn" id="conn" data-state="offline" title="Connection to the proxy server"><span class="dot"></span><span id="conn-text">Not connected</span></span>
+    </nav>
+  </header>
+
+  <main>
+    <section id="view-home" class="view">
+      <h1 class="title">Interstellar</h1>
+      <p id="splash"></p>
+      <div class="search-container">
+        <form id="fv">
+          <input id="input" class="truncate" placeholder="Search or enter a URL" type="text" autocomplete="off" />
+        </form>
+      </div>
+      <p class="hint" id="home-hint"></p>
+    </section>
+
+    <section id="view-games" class="view">
+      <div class="input-c">
+        <input type="text" id="games-search" placeholder="Search" autocomplete="off" />
+        <select title="Category" id="games-category"></select>
+      </div>
+      <div class="pinned-label" id="games-pinned-label" hidden>Pinned</div>
+      <div class="pinned" id="games-pinned"></div>
+      <div class="apps" id="games-grid"><p class="empty">Connect to a server to load the games list.</p></div>
+    </section>
+
+    <section id="view-apps" class="view">
+      <div class="input-c">
+        <input type="text" id="apps-search" placeholder="Search" autocomplete="off" />
+        <select title="Category" id="apps-category"></select>
+      </div>
+      <div class="pinned-label" id="apps-pinned-label" hidden>Pinned</div>
+      <div class="pinned" id="apps-pinned"></div>
+      <div class="apps" id="apps-grid"><p class="empty">Connect to a server to load the apps list.</p></div>
+    </section>
+
+    <section id="view-tabs" class="view">
+      <div class="tab-strip" id="tab-strip">
+        <ul id="tab-list"></ul>
+        <button title="New tab" id="add-tab"><svg class="i"><use href="#i-plus"/></svg></button>
+      </div>
+      <div class="nav-bar">
+        <button title="Home" class="nav-button" id="btn-home"><svg class="i"><use href="#i-house"/></svg></button>
+        <button title="Back" class="nav-button" id="btn-back"><svg class="i"><use href="#i-left"/></svg></button>
+        <button title="Forward" class="nav-button" id="btn-forward"><svg class="i"><use href="#i-right"/></svg></button>
+        <button title="Reload" class="nav-button" id="btn-reload"><svg class="i"><use href="#i-rotate"/></svg></button>
+        <form id="tab-form"><input id="tab-input" class="bar" placeholder="Search or enter a new URL" type="text" autocomplete="off" /></form>
+        <button title="Fullscreen" class="nav-button" id="btn-fullscreen"><svg class="i"><use href="#i-expand"/></svg></button>
+        <button title="Open in about:blank window" class="nav-button" id="btn-popout"><svg class="i"><use href="#i-external"/></svg></button>
+        <button title="Inspect element" class="nav-button" id="btn-inspect"><svg class="i"><use href="#i-code"/></svg></button>
+        <button title="Show / hide tab bar" class="nav-button" id="btn-tabs"><svg class="i"><use href="#i-minus-glass"/></svg></button>
+      </div>
+      <div class="frame-container" id="frame-container"></div>
+    </section>
+
+    <section id="view-settings" class="view">
+      <div class="settings-container">
+        <div class="settings-card" id="card-server">
+          <h3>Proxy Server</h3>
+          <p>This file is only the frontend. It connects to an Interstellar server over a WebSocket, and proxied pages are rendered by that server.</p>
+          <input class="key-form" type="url" id="server-input" placeholder="https://your-server.example.com" autocomplete="off" />
+          <div class="row" id="server-auth-row" hidden>
+            <input class="key-form" type="text" id="server-user" placeholder="Username" autocomplete="username" style="flex:1" />
+            <input class="key-form" type="password" id="server-pass" placeholder="Password" autocomplete="current-password" style="flex:1" />
+          </div>
+          <button class="key-button save" id="server-connect">Connect</button>
+          <button class="key-button" id="server-download">Download this file</button>
+          <div class="status-line" id="server-status">Not connected.</div>
+          <p class="small" style="margin-top:.6rem">If this file is opened from an <code>https://</code> address the server must also be <code>https://</code> (the browser refuses insecure WebSockets from secure pages). Opened from your disk (<code>file://</code>) it can talk to <code>http://localhost</code> too.</p>
+        </div>
+
+        <div class="settings-card">
+          <h3>About:Blank</h3>
+          <p>Cloak the site in an about:blank page and toggle about:blank on startup (enabled by default)</p>
+          <div class="row">
+            <label class="switch"><input type="checkbox" id="ab-settings-switch" /><span class="slider-round"></span></label>
+            <button class="key-button" id="ab-open">Open Popup</button>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>Set Panic Key</h3>
+          <p>Quick open another site with one press. Used for redirects when about:blank is opened. For multiple key strokes separate them with a comma. Ex. "A,B,C"</p>
+          <input type="text" id="eventKeyInput" placeholder="Panic Keys (comma separated)" class="key-form" />
+          <input class="key-form" placeholder="Panic Link" type="text" id="linkInput" />
+          <button class="key-button save" id="save-panic">Save</button>
+        </div>
+
+        <div class="settings-card">
+          <h3>Tab Cloaker</h3>
+          <p>Change the title and icon of the page.</p>
+          <select id="cloak-dropdown"></select>
+          <input class="key-form" type="text" id="cloak-name" placeholder="Custom title" />
+          <input class="key-form" type="text" id="cloak-icon" placeholder="Custom icon URL" />
+          <button class="key-button save" id="cloak-save">Save</button>
+          <button class="key-button reset" id="cloak-reset">Reset Cloak</button>
+        </div>
+
+        <div class="settings-card">
+          <h3>Set Background Image</h3>
+          <p>Change the site's background image.</p>
+          <input class="key-form" type="text" id="background-input" placeholder="Enter image URL" />
+          <button class="key-button save" id="bg-save">Save</button>
+          <button class="key-button reset" id="bg-reset">Reset</button>
+        </div>
+
+        <div class="settings-card">
+          <h3>Search Engine</h3>
+          <p>Change the search engine when searching.</p>
+          <select title="engine" id="engine"></select>
+          <input class="key-form" type="text" id="engine-form" placeholder="Custom search URL (ends with ?q=)" />
+          <button class="key-button save" id="engine-save">Save</button>
+        </div>
+
+        <div class="settings-card">
+          <h3>Choose your Proxy</h3>
+          <p>Choose the proxy engine you want to use for new pages.</p>
+          <select id="pChange">
+            <option value="sj">Scramjet (Default)</option>
+            <option value="uv">Ultraviolet (Legacy)</option>
+            <option value="dy">Dynamic (Doesn't work in about:blank)</option>
+          </select>
+        </div>
+
+        <div class="settings-card">
+          <h3>Particles</h3>
+          <p>Add the particles that are from the previous version to the new site.</p>
+          <label class="switch"><input type="checkbox" id="particles-switch" /><span class="slider-round"></span></label>
+        </div>
+
+        <div class="settings-card">
+          <h3>Themes!</h3>
+          <p>Pick from a variety of themes to customize your experience.</p>
+          <select id="theme-dropdown">
+            <option disabled>Solid Color Themes</option>
+            <option value="d">Default</option>
+            <option value="Inverted">Inverted</option>
+            <option value="sky">Sky</option>
+            <option disabled>Catppuccin Themes</option>
+            <option value="catppuccinMocha">Mocha</option>
+            <option value="catppuccinMacchiato">Macchiato</option>
+            <option value="catppuccinFrappe">Frappe</option>
+            <option value="catppuccinLatte">Latte</option>
+          </select>
+        </div>
+
+        <div class="settings-card">
+          <h3>Save Data Management</h3>
+          <p>Export your saved data (settings here plus game saves stored on the proxy server origin) and import it on another site or device.</p>
+          <p id="warning">Importing a save file will overwrite your current saves!</p>
+          <button class="key-button export" id="export-save">Export Save</button>
+          <button class="key-button import" id="import-save">Import Save</button>
+        </div>
+
+        <div class="settings-card">
+          <h3>Information</h3>
+          <p>Client version: <span id="client-version">websocket-1.0.0</span></p>
+          <p>Server: <span id="server-version">not connected</span></p>
+          <p>Frontend fork of <a href="https://github.com/UseInterstellar/Interstellar" target="_blank" rel="noopener">Interstellar</a> (GPL-3.0). The UI lives in this single HTML file; the proxy engine, apps list and games list come from the server over a WebSocket.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal" id="connect-modal" hidden>
+    <div class="settings-card">
+      <h2>Connect to a server</h2>
+      <p id="connect-modal-text">Enter the address of your Interstellar server.</p>
+      <input class="key-form" type="url" id="modal-server" placeholder="https://your-server.example.com" autocomplete="off" />
+      <div id="modal-auth" hidden>
+        <input class="key-form" type="text" id="modal-user" placeholder="Username" autocomplete="username" />
+        <input class="key-form" type="password" id="modal-pass" placeholder="Password" autocomplete="current-password" />
+      </div>
+      <div class="status-line" id="modal-status"></div>
+      <button class="key-button save" id="modal-connect">Connect</button>
+      <button class="key-button" id="modal-close">Close</button>
+    </div>
+  </div>
+
+  <div class="banner" id="banner" hidden><span id="banner-text"></span><button class="key-button" id="banner-action"></button><button class="key-button" id="banner-close">✕</button></div>
+
+  <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-gamepad" viewBox="0 0 640 512"><path d="M480 96H160C71.6 96 0 167.6 0 256s71.6 160 160 160c44.8 0 85.2-18.4 114.2-48h91.5c29 29.6 69.5 48 114.2 48 88.4 0 160-71.6 160-160S568.4 96 480 96zM256 276c0 6.6-5.4 12-12 12h-52v52c0 6.6-5.4 12-12 12h-40c-6.6 0-12-5.4-12-12v-52H76c-6.6 0-12-5.4-12-12v-40c0-6.6 5.4-12 12-12h52v-52c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v52h52c6.6 0 12 5.4 12 12v40zm184 68c-26.5 0-48-21.5-48-48s21.5-48 48-48 48 21.5 48 48-21.5 48-48 48zm80-80c-26.5 0-48-21.5-48-48s21.5-48 48-48 48 21.5 48 48-21.5 48-48 48z"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 384 512"><path d="M320 0H64C28.7 0 0 28.7 0 64v384c0 35.3 28.7 64 64 64h256c35.3 0 64-28.7 64-64V64c0-35.3-28.7-64-64-64zM192 480c-26.5 0-48-21.5-48-48s21.5-48 48-48 48 21.5 48 48-21.5 48-48 48zm144-128H48V64h288v288z"/></symbol>
+    <symbol id="i-laptop" viewBox="0 0 640 512"><path d="M128 32C92.7 32 64 60.7 64 96v256h64V96h384v256h64V96c0-35.3-28.7-64-64-64H128zM19.2 384C8.6 384 0 392.6 0 403.2 0 445.6 34.4 480 76.8 480h486.4c42.4 0 76.8-34.4 76.8-76.8 0-10.6-8.6-19.2-19.2-19.2H19.2z"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 512 512"><path d="M495.9 166.6c3.2 8.7.5 18.4-6.4 24.6l-43.3 39.4c1.1 8.3 1.7 16.8 1.7 25.4s-.6 17.1-1.7 25.4l43.3 39.4c6.9 6.2 9.6 15.9 6.4 24.6-4.4 11.9-9.7 23.3-15.8 34.3l-4.7 8.1c-6.6 11-14 21.4-22.1 31.2-5.9 7.2-15.7 9.6-24.5 6.8l-55.7-17.7c-13.4 10.3-28.2 18.9-44 25.4l-12.5 57.1c-2 9.1-9 16.3-18.2 17.8-13.8 2.3-28 3.5-42.5 3.5s-28.7-1.2-42.5-3.5c-9.2-1.5-16.2-8.7-18.2-17.8l-12.5-57.1c-15.8-6.5-30.6-15.1-44-25.4L83.1 425.9c-8.8 2.8-18.6.3-24.5-6.8-8.1-9.8-15.5-20.2-22.1-31.2l-4.7-8.1c-6.1-11-11.4-22.4-15.8-34.3-3.2-8.7-.5-18.4 6.4-24.6l43.3-39.4C64.6 273.1 64 264.6 64 256s.6-17.1 1.7-25.4L22.4 191.2c-6.9-6.2-9.6-15.9-6.4-24.6 4.4-11.9 9.7-23.3 15.8-34.3l4.7-8.1c6.6-11 14-21.4 22.1-31.2 5.9-7.2 15.7-9.6 24.5-6.8l55.7 17.7c13.4-10.3 28.2-18.9 44-25.4l12.5-57.1c2-9.1 9-16.3 18.2-17.8C227.3 1.2 241.5 0 256 0s28.7 1.2 42.5 3.5c9.2 1.5 16.2 8.7 18.2 17.8l12.5 57.1c15.8 6.5 30.6 15.1 44 25.4l55.7-17.7c8.8-2.8 18.6-.3 24.5 6.8 8.1 9.8 15.5 20.2 22.1 31.2l4.7 8.1c6.1 11 11.4 22.4 15.8 34.3zM256 336a80 80 0 1 0 0-160 80 80 0 1 0 0 160z"/></symbol>
+    <symbol id="i-house" viewBox="0 0 576 512"><path d="M575.8 255.5c0 18-15 32.1-32 32.1h-32l.7 160.2c0 2.7-.2 5.4-.5 8.1V472c0 22.1-17.9 40-40 40h-16c-1.1 0-2.2 0-3.3-.1-1.4.1-2.8.1-4.2.1H392c-22.1 0-40-17.9-40-40v-88c0-17.7-14.3-32-32-32h-64c-17.7 0-32 14.3-32 32v88c0 22.1-17.9 40-40 40h-55.9c-1.5 0-3-.1-4.5-.2-1.2.1-2.4.2-3.6.2h-16c-22.1 0-40-17.9-40-40V360c0-.9 0-1.9.1-2.8v-69.7h-32c-18 0-32-14-32-32.1 0-9 3-17 10-24L266.4 8c7-7 15-8 22-8s15 2 21 7l255.4 224.5c8 7 12 15 11 24z"/></symbol>
+    <symbol id="i-left" viewBox="0 0 448 512"><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H109.3l105.3-105.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></symbol>
+    <symbol id="i-right" viewBox="0 0 448 512"><path d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224H32c-17.7 0-32 14.3-32 32s14.3 32 32 32h306.7L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"/></symbol>
+    <symbol id="i-rotate" viewBox="0 0 512 512"><path d="M463.5 224h8.5c13.3 0 24-10.7 24-24V72c0-9.7-5.8-18.5-14.8-22.2S461.9 48.1 455 55l-41.6 41.6C376.1 59.4 318.7 32 256 32 132.3 32 32 132.3 32 256s100.3 224 224 224c62.9 0 119.9-26 160.6-67.7 12.5-12.8 12.2-33.4-.7-45.7s-33.2-11.9-45.7.7C341.3 397.2 300.2 416 256 416c-88.4 0-160-71.6-160-160s71.6-160 160-160c44.8 0 85.3 18.4 114.2 48.2l-.1.1-37 37c-6.9 6.9-8.9 17.2-5.2 26.2s12.5 14.8 22.2 14.8h113.4z"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 448 512"><path d="M32 32C14.3 32 0 46.3 0 64v96c0 17.7 14.3 32 32 32s32-14.3 32-32V96h64c17.7 0 32-14.3 32-32s-14.3-32-32-32H32zm32 320c0-17.7-14.3-32-32-32S0 334.3 0 352v96c0 17.7 14.3 32 32 32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H64v-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32h64v64c0 17.7 14.3 32 32 32s32-14.3 32-32V64c0-17.7-14.3-32-32-32h-96zm128 320c0-17.7-14.3-32-32-32s-32 14.3-32 32v64h-64c-17.7 0-32 14.3-32 32s14.3 32 32 32h96c17.7 0 32-14.3 32-32v-96z"/></symbol>
+    <symbol id="i-external" viewBox="0 0 512 512"><path d="M320 0c-17.7 0-32 14.3-32 32s14.3 32 32 32h82.7L201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L448 109.3V192c0 17.7 14.3 32 32 32s32-14.3 32-32V32c0-17.7-14.3-32-32-32H320zM80 32C35.8 32 0 67.8 0 112v320c0 44.2 35.8 80 80 80h320c44.2 0 80-35.8 80-80V320c0-17.7-14.3-32-32-32s-32 14.3-32 32v112c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16h112c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z"/></symbol>
+    <symbol id="i-code" viewBox="0 0 640 512"><path d="M392.8 1.2c-17-4.9-34.7 5-39.6 22l-128 448c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l128-448c4.9-17-5-34.7-22-39.6zm80.6 120.1c-12.5 12.5-12.5 32.8 0 45.3l89.3 89.4-89.4 89.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l112-112c12.5-12.5 12.5-32.8 0-45.3l-112-112c-12.5-12.5-32.8-12.5-45.3 0zm-306.7 0c-12.5-12.5-32.8-12.5-45.3 0l-112 112c-12.5 12.5-12.5 32.8 0 45.3l112 112c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256l89.4-89.4c12.5-12.5 12.5-32.8 0-45.3z"/></symbol>
+    <symbol id="i-minus-glass" viewBox="0 0 512 512"><path d="M416 208c0 45.9-14.9 88.3-40 122.7l126.6 126.7c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0s208 93.1 208 208zM136 184c-13.3 0-24 10.7-24 24s10.7 24 24 24h144c13.3 0 24-10.7 24-24s-10.7-24-24-24H136z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 448 512"><path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32v144H48c-17.7 0-32 14.3-32 32s14.3 32 32 32h144v144c0 17.7 14.3 32 32 32s32-14.3 32-32V288h144c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 384 512"><path d="M32 32C32 14.3 46.3 0 64 0h256c17.7 0 32 14.3 32 32s-14.3 32-32 32h-3.7l14.8 133.3c25.6 11.9 47.2 31.8 60.9 57.4l6.1 11.4c5.3 9.9 5 21.9-.8 31.5S381.5 313 370.3 313H13.7c-11.2 0-21.5-5.8-27.3-15.4s-6.1-21.6-.8-31.5l6.1-11.4c13.7-25.6 35.3-45.5 60.9-57.4L67.7 64H64c-17.7 0-32-14.3-32-32zm128 313h64v135c0 17.7-14.3 32-32 32s-32-14.3-32-32V345z"/></symbol>
+  </svg>
+
+  <script>
+  (() => {
+    "use strict";
+
+    /* ------------------------------------------------------------ */
+    /*  Storage (localStorage can be unavailable in odd origins)      */
+    /* ------------------------------------------------------------ */
+    const memory = {};
+    const store = {
+      get(key, fallback = null) {
+        try { const v = localStorage.getItem(key); return v === null ? fallback : v; } catch { return key in memory ? memory[key] : fallback; }
+      },
+      set(key, value) { try { localStorage.setItem(key, value); } catch { memory[key] = String(value); } },
+      remove(key) { try { localStorage.removeItem(key); } catch { delete memory[key]; } },
+      json(key, fallback) { try { const v = store.get(key); return v === null ? fallback : JSON.parse(v); } catch { return fallback; } },
+      all() {
+        const out = {};
+        try { for (const k of Object.keys(localStorage)) out[k] = localStorage.getItem(k); } catch { Object.assign(out, memory); }
+        return out;
+      },
+    };
+
+    const PRISTINE_HTML = `<!doctype html>\n${document.documentElement.outerHTML}`;
+    const $ = id => document.getElementById(id);
+    const CLOAKS = {"Google":{"name":"Google","icon":"/assets/media/favicon/google.png"},"Savvas Realize":{"name":"Savvas Realize","icon":"/assets/media/favicon/savvas-realize.png"},"SmartPass":{"name":"SmartPass","icon":"/assets/media/favicon/smartpass.png"},"World Book Online - Super Home":{"name":"Super Home Page","icon":"/assets/media/favicon/wbo.ico"},"World Book Online - Student":{"name":"WBO Student | Home Page","icon":"/assets/media/favicon/wbo.ico"},"World Book Online - Timelines":{"name":"Timelines - Home Page","icon":"/assets/media/favicon/wbo.ico"},"Naviance":{"name":"Naviance Student","icon":"/assets/media/favicon/naviance.png"},"PBS Learning Media":{"name":"PBS LearningMedia | Teaching Resources For Students And Teachers","icon":"/assets/media/favicon/pbslearningmedia.ico"},"PBS Learning Media Student Home":{"name":"Student Homepage | PBS LearningMedia","icon":"/assets/media/favicon/pbslearningmedia.ico"},"Drive":{"name":"My Drive - Google Drive","icon":"/assets/media/favicon/drive.png"},"Classroom":{"name":"Home","icon":"/assets/media/favicon/classroom.png"},"Schoology":{"name":"Home | Schoology","icon":"/assets/media/favicon/schoology.png"},"Gmail":{"name":"Gmail","icon":"/assets/media/favicon/gmail.png"},"Clever":{"name":"Clever | Portal","icon":"/assets/media/favicon/clever.png"},"Khan":{"name":"Dashboard | Khan Academy","icon":"/assets/media/favicon/khan.png"},"Dictionary":{"name":"Dictionary.com | Meanings & Definitions of English Words","icon":"/assets/media/favicon/dictionary.png"},"Thesaurus":{"name":"Synonyms and Antonyms of Words | Thesaurus.com","icon":"/assets/media/favicon/thesaurus.png"},"Campus":{"name":"Infinite Campus","icon":"/assets/media/favicon/campus.png"},"IXL":{"name":"IXL | Dashboard","icon":"/assets/media/favicon/ixl.png"},"Canvas":{"name":"Dashboard","icon":"/assets/media/favicon/canvas.png"},"CodeHS":{"name":"Sandbox | CodeHS","icon":"/assets/media/favicon/codehs.png"},"LinkIt":{"name":"Test Taker","icon":"/assets/media/favicon/linkit.ico"},"Edpuzzle":{"name":"Edpuzzle","icon":"/assets/media/favicon/edpuzzle.png"},"i-Ready Math":{"name":"Math To Do, i-Ready","icon":"/assets/media/favicon/i-ready.ico"},"i-Ready Reading":{"name":"Reading To Do, i-Ready","icon":"/assets/media/favicon/i-ready.ico"},"ClassLink Login":{"name":"Login","icon":"/assets/media/favicon/classlink-login.png"},"Google Meet":{"name":"Google Meet","icon":"/assets/media/favicon/google-meet.png"},"Google Docs":{"name":"Google Docs","icon":"/assets/media/favicon/google-docs.ico"},"Google Slides":{"name":"Google Slides","icon":"/assets/media/favicon/google-slides.ico"},"Wikipedia":{"name":"Wikipedia","icon":"/assets/media/favicon/wikipedia.png"},"Britannica":{"name":"Encyclopedia Britannica | Britannica","icon":"/assets/media/favicon/britannica.png"},"Ducksters":{"name":"Ducksters","icon":"/assets/media/favicon/ducksters.png"},"Minga":{"name":"Minga – Creating Amazing Schools","icon":"/assets/media/favicon/minga.png"},"i-Ready Learning Games":{"name":"Learning Games, i-Ready","icon":"/assets/media/favicon/i-ready.ico"},"NoRedInk Home":{"name":"Student Home | NoRedInk","icon":"/assets/media/favicon/noredink.png"},"Desmos":{"name":"Desmos | Graphing Calculator","icon":"/assets/media/favicon/desmos.ico"},"Newsela Binder":{"name":"Newsela | Binder","icon":"/assets/media/favicon/newsela.png"},"Newsela Assignments":{"name":"Newsela | Assignments","icon":"/assets/media/favicon/newsela.png"},"Newsela Home":{"name":"Newsela | Instructional Content Platform","icon":"/assets/media/favicon/newsela.png"},"PowerSchool Sign In":{"name":"Student and Parent Sign In","icon":"/assets/media/favicon/powerschool.png"},"PowerSchool Grades and Attendance":{"name":"Grades and Attendance","icon":"/assets/media/favicon/powerschool.png"},"PowerSchool Teacher Comments":{"name":"Teacher Comments","icon":"/assets/media/favicon/powerschool.png"},"PowerSchool Standards Grades":{"name":"Standards Grades","icon":"/assets/media/favicon/powerschool.png"},"PowerSchool Attendance":{"name":"Attendance","icon":"/assets/media/favicon/powerschool.png"},"Nearpod":{"name":"Nearpod","icon":"/assets/media/favicon/nearpod.png"},"StudentVUE":{"name":"StudentVUE","icon":"/assets/media/favicon/studentvue.ico"},"Quizlet Home":{"name":"Flashcards, learning tools and textbook solutions | Quizlet","icon":"/assets/media/favicon/quizlet.webp"},"Google Forms Locked Mode":{"name":"Start your quiz","icon":"/assets/media/favicon/googleforms.png"},"DeltaMath":{"name":"DeltaMath","icon":"/assets/media/favicon/deltamath.png"},"Kami":{"name":"Kami","icon":"/assets/media/favicon/kami.png"},"GoGuardian Admin Restricted":{"name":"Restricted","icon":"/assets/media/favicon/goguardian-lock.png"},"GoGuardian Teacher Block":{"name":"Uh oh!","icon":"/assets/media/favicon/goguardian.png"},"World History Encyclopedia":{"name":"World History Encyclopedia","icon":"/assets/media/favicon/worldhistoryencyclopedia.png"},"Big Ideas Math Assignment Player":{"name":"Assignment Player","icon":"/assets/media/favicon/bim.ico"},"Big Ideas Math":{"name":"Big Ideas Math","icon":"/assets/media/favicon/bim.ico"}};
+    const SEARCH_ENGINES = {
+      Brave: "https://search.brave.com/search?q=",
+      Google: "https://www.google.com/search?q=",
+      Bing: "https://www.bing.com/search?q=",
+      Qwant: "https://www.qwant.com/?q=",
+      Startpage: "https://www.startpage.com/search?q=",
+      SearchEncrypt: "https://www.searchencrypt.com/search/?q=",
+      Ecosia: "https://www.ecosia.org/search?q=",
+    };
+    const CATEGORY_LABELS = {
+      all: "All", android: "Android Emulator", social: "Social", stream: "Stream", message: "Message", media: "TV & Movies", game: "Game Sites",
+      cloud: "Cloud Gaming", tool: "Tools", ai: "AI", emu: "Emulator", mail: "Mail", "2d": "2D", "2p": "2 Player", local: "Local", sports: "Sports", flash: "Flash",
+    };
+    const IS_CLOAK_WINDOW = window.name === "interstellar-cloak";
+
+    /* ------------------------------------------------------------ */
+    /*  Server connection state                                      */
+    /* ------------------------------------------------------------ */
+    const state = {
+      server: "",          // http(s) origin of the proxy server
+      token: null,
+      hello: null,
+      authed: false,
+      lists: { apps: null, games: null },
+    };
+
+    function detectServer() {
+      const fromQuery = new URLSearchParams(location.search).get("server");
+      if (fromQuery) { store.set("is_server", normalizeServer(fromQuery)); }
+      const saved = store.get("is_server");
+      if (saved) return saved;
+      if (location.protocol === "http:" || location.protocol === "https:") return location.origin;
+      return "";
+    }
+
+    function normalizeServer(value) {
+      let v = String(value || "").trim();
+      if (!v) return "";
+      if (!/^https?:\/\//i.test(v)) v = (/^(localhost|127\.|\[?::1)/.test(v) ? "http://" : "https://") + v;
+      try { return new URL(v).origin; } catch { return ""; }
+    }
+
+    function serverUrl(path) {
+      if (!state.server) return "";
+      if (!path) return state.server;
+      if (/^https?:\/\//i.test(path)) return path;
+      return state.server + (path.startsWith("/") ? path : `/${path}`);
+    }
+
+    /* ------------------------------------------------------------ */
+    /*  Control WebSocket client                                     */
+    /* ------------------------------------------------------------ */
+    class Control {
+      constructor() {
+        this.ws = null;
+        this.pending = new Map();
+        this.seq = 0;
+        this.backoff = 1000;
+        this.wanted = false;
+        this.onHello = () => {};
+        this.onState = () => {};
+      }
+      url() {
+        const u = new URL(state.server);
+        u.protocol = u.protocol === "https:" ? "wss:" : "ws:";
+        u.pathname = "/ws";
+        u.search = "";
+        if (state.token) u.searchParams.set("token", state.token);
+        return u.toString();
+      }
+      connect() {
+        if (!state.server) return;
+        this.wanted = true;
+        this.close(false);
+        this.onState("connecting");
+        let ws;
+        try { ws = new WebSocket(this.url()); } catch (error) { this.onState("offline", String(error.message || error)); return; }
+        this.ws = ws;
+        ws.onopen = () => { this.backoff = 1000; };
+        ws.onmessage = event => {
+          let msg;
+          try { msg = JSON.parse(event.data); } catch { return; }
+          if (msg.type === "hello") { this.onState("online"); this.onHello(msg); return; }
+          if (msg.id && this.pending.has(msg.id)) {
+            const { resolve, reject, timer } = this.pending.get(msg.id);
+            clearTimeout(timer);
+            this.pending.delete(msg.id);
+            if (msg.ok) resolve(msg); else { const e = new Error(msg.error || "Request failed"); e.code = msg.code; reject(e); }
+          }
+        };
+        ws.onclose = event => {
+          if (this.ws !== ws) return;
+          this.ws = null;
+          for (const [, p] of this.pending) { clearTimeout(p.timer); p.reject(new Error("Disconnected")); }
+          this.pending.clear();
+          this.onState("offline", event.reason || (event.code === 1006 ? "Could not reach the server" : `Closed (${event.code})`));
+          if (this.wanted) {
+            setTimeout(() => this.wanted && !this.ws && this.connect(), this.backoff);
+            this.backoff = Math.min(this.backoff * 2, 15000);
+          }
+        };
+        ws.onerror = () => {};
+      }
+      close(forget = true) {
+        if (forget) this.wanted = false;
+        if (this.ws) { const ws = this.ws; this.ws = null; try { ws.close(); } catch {} }
+      }
+      get online() { return Boolean(this.ws && this.ws.readyState === WebSocket.OPEN); }
+      request(type, data = {}, timeout = 15000) {
+        return new Promise((resolve, reject) => {
+          if (!this.online) return reject(new Error("Not connected to the server"));
+          const id = String(++this.seq);
+          const timer = setTimeout(() => { this.pending.delete(id); reject(new Error("Server did not answer")); }, timeout);
+          this.pending.set(id, { resolve, reject, timer });
+          this.ws.send(JSON.stringify({ id, type, ...data }));
+        });
+      }
+    }
+    const control = new Control();
+
+    function setConn(stateName, text) {
+      const conn = $("conn");
+      conn.dataset.state = stateName;
+      $("conn-text").textContent = text;
+      $("server-status").textContent = text + (state.server ? ` (${state.server})` : "");
+      if ($("modal-status")) $("modal-status").textContent = text;
+    }
+    control.onState = (s, reason) => {
+      if (s === "online") setConn("online", state.hello ? `Connected` : "Connected");
+      else if (s === "connecting") setConn("connecting", "Connecting…");
+      else setConn("offline", reason ? `Offline: ${reason}` : "Not connected");
+    };
+    control.onHello = async hello => {
+      state.hello = hello;
+      $("server-version").textContent = `${hello.name} v${hello.version} (${hello.challenge ? "password protected" : "open"})`;
+      $("server-auth-row").hidden = !hello.challenge;
+      $("modal-auth").hidden = !hello.challenge;
+      if (hello.challenge && !hello.authed) {
+        const saved = store.get("is_token");
+        if (saved) {
+          try { const r = await control.request("auth", { token: saved }); state.token = r.token; store.set("is_token", r.token); }
+          catch { state.token = null; store.remove("is_token"); }
+        }
+        if (!state.token) {
+          const creds = store.json("is_creds", null);
+          if (creds) {
+            try { const r = await control.request("auth", creds); state.token = r.token; store.set("is_token", r.token); }
+            catch { store.remove("is_creds"); }
+          }
+        }
+        if (!state.token) { openConnectModal("This server needs a username and password."); setConn("online", "Connected – sign in required"); return; }
+      } else if (hello.challenge && hello.authed && !state.token) {
+        try { const r = await control.request("auth", { token: store.get("is_token") }); state.token = r.token; } catch {}
+      }
+      state.authed = true;
+      setConn("online", `Connected to ${hello.name} v${hello.version}`);
+      closeConnectModal();
+      applyServerAssets();
+      loadLists();
+    };
+
+    async function login(username, password) {
+      const r = await control.request("auth", { username, password });
+      state.token = r.token;
+      store.set("is_token", r.token || "");
+      store.set("is_creds", JSON.stringify({ username, password }));
+      state.authed = true;
+      setConn("online", `Connected as ${r.user}`);
+      applyServerAssets();
+      loadLists();
+    }
+
+    function connectTo(server) {
+      const normalized = normalizeServer(server);
+      if (!normalized) { setConn("offline", "Enter a valid server address"); return; }
+      if (normalized !== state.server) { state.token = null; state.authed = false; state.lists = { apps: null, games: null }; }
+      state.server = normalized;
+      store.set("is_server", normalized);
+      $("server-input").value = normalized;
+      $("modal-server").value = normalized;
+      if (location.protocol === "https:" && normalized.startsWith("http://")) {
+        setConn("offline", "This page is https:// so the server must be https:// too");
+        return;
+      }
+      control.connect();
+    }
+
+    /* ------------------------------------------------------------ */
+    /*  Connect modal / banner                                       */
+    /* ------------------------------------------------------------ */
+    function openConnectModal(text) {
+      $("connect-modal-text").textContent = text || "Enter the address of your Interstellar server.";
+      $("modal-server").value = state.server;
+      $("connect-modal").hidden = false;
+      setTimeout(() => ($("modal-auth").hidden ? $("modal-server") : $("modal-user")).focus(), 50);
+    }
+    function closeConnectModal() { $("connect-modal").hidden = true; }
+    $("modal-close").onclick = closeConnectModal;
+    $("modal-connect").onclick = async () => {
+      const server = $("modal-server").value;
+      if (normalizeServer(server) !== state.server || !control.online) { connectTo(server); return; }
+      if (!$("modal-auth").hidden) {
+        try { await login($("modal-user").value, $("modal-pass").value); closeConnectModal(); }
+        catch (error) { $("modal-status").textContent = error.message; }
+      }
+    };
+    $("server-connect").onclick = async () => {
+      const server = $("server-input").value;
+      const user = $("server-user").value;
+      const pass = $("server-pass").value;
+      if (user || pass) store.set("is_creds", JSON.stringify({ username: user, password: pass }));
+      if (normalizeServer(server) !== state.server || !control.online) { connectTo(server); return; }
+      if (user || pass) { try { await login(user, pass); } catch (error) { setConn("online", error.message); } }
+    };
+    $("server-download").onclick = () => {
+      if (state.server) window.open(serverUrl("/client.html?download"), "_blank");
+      else alert("Connect to a server first.");
+    };
+    $("conn").onclick = () => openConnectModal(control.online ? "Connected. Change the server or sign in below." : "Enter the address of your Interstellar server.");
+
+    let bannerAction = null;
+    function showBanner(text, actionLabel, action) {
+      $("banner-text").textContent = text;
+      $("banner-action").textContent = actionLabel || "";
+      $("banner-action").hidden = !actionLabel;
+      bannerAction = action;
+      $("banner").hidden = false;
+    }
+    $("banner-action").onclick = () => { if (bannerAction) bannerAction(); $("banner").hidden = true; };
+    $("banner-close").onclick = () => { $("banner").hidden = true; };
+
+    /* ------------------------------------------------------------ */
+    /*  Theme, cloak, background, panic key                          */
+    /* ------------------------------------------------------------ */
+    function applyTheme() {
+      const theme = store.get("theme", "d");
+      if (theme && theme !== "d") document.documentElement.dataset.theme = theme; else delete document.documentElement.dataset.theme;
+      $("theme-dropdown").value = theme || "d";
+      applyServerAssets();
+    }
+    function applyServerAssets() {
+      const inverted = store.get("theme") === "Inverted";
+      const custom = store.get("backgroundImage");
+      const themed = /^catppuccin/.test(store.get("theme", ""));
+      let bg = "none";
+      if (custom) bg = `url("${custom.replace(/"/g, '%22')}")`;
+      else if (state.server && !themed) bg = `url("${serverUrl(inverted ? "/assets/media/background/full-inverted.png" : "/assets/media/background/full-main.png")}")`;
+      document.documentElement.style.setProperty("--background-image", bg);
+      $("INImg").src = state.server ? serverUrl(inverted ? "/assets/media/favicon/main-inverted.png" : "/assets/media/favicon/main.png") : "data:,";
+      applyCloak();
+    }
+    function cloakValues() {
+      const preset = CLOAKS[store.get("selectedOption", "")];
+      let name = preset ? preset.name : "Home";
+      let icon = preset ? serverUrl(preset.icon) : serverUrl("/favicon.png");
+      if (store.get("CustomName")) name = store.get("CustomName");
+      if (store.get("CustomIcon")) icon = store.get("CustomIcon");
+      return { name, icon: icon || "data:," };
+    }
+    function applyCloak() {
+      const { name, icon } = cloakValues();
+      document.title = name;
+      $("tab-favicon").href = icon;
+      store.set("name", name);
+      store.set("icon", icon);
+    }
+    function applyParticles() {
+      const on = store.get("Particles") === "true";
+      $("particles").hidden = !on;
+      $("particles-switch").checked = on;
+      if (on) startParticles(); else stopParticles();
+    }
+
+    // Panic key (same storage format as upstream: eventKey = JSON array of keys)
+    let pressedKeys = [];
+    document.addEventListener("keydown", event => {
+      const keys = store.json("eventKey", null) || ["`"];
+      const link = store.get("pLink", "https://classroom.google.com/");
+      pressedKeys.push(event.key);
+      if (pressedKeys.length > keys.length) pressedKeys.shift();
+      if (keys.length && keys.every((k, i) => k === pressedKeys[i])) { pressedKeys = []; location.replace(link); }
+    });
+
+    /* ------------------------------------------------------------ */
+    /*  Particles (tiny stand-in for particles.js)                   */
+    /* ------------------------------------------------------------ */
+    let particleTimer = null;
+    let dots = [];
+    const mouse = { x: -1000, y: -1000 };
+    window.addEventListener("mousemove", e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+    function startParticles() {
+      if (particleTimer) return;
+      const canvas = $("particles");
+      const ctx = canvas.getContext("2d");
+      const resize = () => { canvas.width = innerWidth; canvas.height = innerHeight; };
+      resize();
+      window.addEventListener("resize", resize);
+      dots = Array.from({ length: 160 }, () => ({ x: Math.random() * innerWidth, y: Math.random() * innerHeight, r: Math.random() * 2.5 + .5, v: Math.random() * 1.2 + .3, o: Math.random() * .7 + .3 }));
+      const tick = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const color = getComputedStyle(document.documentElement).getPropertyValue("--text-primary").trim() || "#fff";
+        ctx.fillStyle = color;
+        for (const d of dots) {
+          d.y += d.v;
+          const dx = d.x - mouse.x, dy = d.y - mouse.y, dist = Math.hypot(dx, dy);
+          if (dist < 60) { d.x += dx / dist * 2; d.y += dy / dist * 2; }
+          if (d.y > canvas.height + 5) { d.y = -5; d.x = Math.random() * canvas.width; }
+          ctx.globalAlpha = d.o;
+          ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        particleTimer = requestAnimationFrame(tick);
+      };
+      particleTimer = requestAnimationFrame(tick);
+    }
+    function stopParticles() { if (particleTimer) cancelAnimationFrame(particleTimer); particleTimer = null; }
+
+    /* ------------------------------------------------------------ */
+    /*  Router                                                       */
+    /* ------------------------------------------------------------ */
+    const views = ["home", "games", "apps", "tabs", "settings"];
+    function currentView() {
+      const hash = location.hash.replace(/^#\/?/, "").split("?")[0];
+      return views.includes(hash) ? hash : "home";
+    }
+    function route() {
+      const view = currentView();
+      for (const v of views) $(`view-${v}`).classList.toggle("active", v === view);
+      for (const a of document.querySelectorAll(".f-nav-right a[data-view]")) a.classList.toggle("active", a.dataset.view === view);
+      $("f-nav").hidden = view === "tabs";
+      document.body.classList.toggle("in-tabs", view === "tabs");
+      if (view === "tabs" && tabs.length === 0 && state.server) createTab();
+      if (view === "games" || view === "apps") renderList(view);
+    }
+    window.addEventListener("hashchange", route);
+
+    /* ------------------------------------------------------------ */
+    /*  URL handling                                                 */
+    /* ------------------------------------------------------------ */
+    function isUrl(val = "") { return /^http(s?):\/\//.test(val) || (val.includes(".") && val[0] !== " "); }
+    function localResolve(input) {
+      let url = String(input || "").trim();
+      if (!url) return "";
+      if (url.startsWith("/")) return url;
+      const engine = store.get("engine") || SEARCH_ENGINES.Brave;
+      if (!isUrl(url)) url = engine + encodeURIComponent(url);
+      else if (!/^https?:\/\//.test(url)) url = `https://${url}`;
+      return url;
+    }
+    async function resolve(input) {
+      if (control.online && state.authed) {
+        try { const r = await control.request("resolve", { input, engine: store.get("engine") || "Brave" }); return r.url; } catch {}
+      }
+      return localResolve(input);
+    }
+    function currentEngine() { const p = store.get("pchoice", "sj"); return ["sj", "uv", "dy"].includes(p) ? p : "sj"; }
+
+    /* ------------------------------------------------------------ */
+    /*  Home                                                         */
+    /* ------------------------------------------------------------ */
+    const SPLASH = [
+      "Runs from a single HTML file", "Connected over WebSocket", "Fastest growing proxy server", "Check out discord.gg/interstellar :)",
+      "Thanks for using the site", "Check out the settings page", "Open this file from anywhere", "Made with Interstellar",
+    ];
+    let splashIndex = Math.floor(Math.random() * SPLASH.length);
+    $("splash").textContent = SPLASH[splashIndex];
+    $("splash").onclick = () => { splashIndex = (splashIndex + 1) % SPLASH.length; $("splash").textContent = SPLASH[splashIndex]; };
+    $("fv").addEventListener("submit", async event => {
+      event.preventDefault();
+      const value = $("input").value.trim();
+      if (!value) return;
+      if (!ensureServer()) return;
+      const url = await resolve(value);
+      openInTab(url, { newTab: false });
+      $("input").value = "";
+    });
+    function ensureServer() {
+      if (!state.server) { openConnectModal("Enter the address of your Interstellar server first."); return false; }
+      if (state.hello?.challenge && !state.authed) { openConnectModal("Sign in to this server first."); return false; }
+      return true;
+    }
+
+    /* ------------------------------------------------------------ */
+    /*  Apps & games                                                 */
+    /* ------------------------------------------------------------ */
+    async function loadLists() {
+      for (const kind of ["apps", "games"]) {
+        try { const r = await control.request("list", { kind }); state.lists[kind] = r.items; }
+        catch (error) { console.warn("list", kind, error); }
+      }
+      renderList("apps");
+      renderList("games");
+      const view = currentView();
+      if (view === "home") $("home-hint").textContent = state.lists.games ? `${state.lists.games.length} games · ${state.lists.apps?.length || 0} apps ready` : "";
+    }
+    function customKey(kind) { return kind === "games" ? "Gcustom" : "Acustom"; }
+    function pinsKey(kind) { return `is_pins_${kind}`; }
+    function allItems(kind) {
+      const base = state.lists[kind] || [];
+      const custom = Object.values(store.json(customKey(kind), {}) || {});
+      return [...custom, ...base].sort((a, b) => {
+        if (a.name.startsWith("[Custom]")) return -1;
+        if (b.name.startsWith("[Custom]")) return 1;
+        return a.name.localeCompare(b.name);
+      });
+    }
+    function categoriesOf(item) { return (item.categories || ["all"]).map(c => String(c).trim().toLowerCase()).filter(Boolean); }
+    function buildCategories(kind) {
+      const select = $(`${kind}-category`);
+      const seen = new Set(["all"]);
+      for (const item of state.lists[kind] || []) for (const c of categoriesOf(item)) seen.add(c);
+      const previous = select.value || "all";
+      select.innerHTML = "";
+      for (const c of seen) {
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = CATEGORY_LABELS[c] || c.charAt(0).toUpperCase() + c.slice(1);
+        select.appendChild(opt);
+      }
+      select.value = seen.has(previous) ? previous : "all";
+    }
+    function renderList(kind) {
+      if (!$(`${kind}-category`).options.length || $(`${kind}-category`).dataset.count !== String((state.lists[kind] || []).length)) {
+        buildCategories(kind);
+        $(`${kind}-category`).dataset.count = String((state.lists[kind] || []).length);
+      }
+      const grid = $(`${kind}-grid`);
+      const pinnedGrid = $(`${kind}-pinned`);
+      grid.innerHTML = "";
+      pinnedGrid.innerHTML = "";
+      if (!state.lists[kind]) {
+        grid.innerHTML = `<p class="empty">${state.server ? "Loading list from the server…" : "Connect to a server to load this list."}</p>`;
+        $(`${kind}-pinned-label`).hidden = true;
+        return;
+      }
+      const query = $(`${kind}-search`).value.trim().toLowerCase();
+      const category = $(`${kind}-category`).value || "all";
+      const pins = new Set(store.json(pinsKey(kind), []));
+      let shown = 0;
+      for (const item of allItems(kind)) {
+        const cats = categoriesOf(item);
+        if (category !== "all" && !cats.includes(category)) continue;
+        if (query && !item.name.toLowerCase().includes(query)) continue;
+        const card = itemCard(item, kind, pins.has(item.name));
+        (pins.has(item.name) ? pinnedGrid : grid).appendChild(card);
+        shown++;
+      }
+      $(`${kind}-pinned-label`).hidden = pinnedGrid.children.length === 0;
+      if (!shown) grid.innerHTML = '<p class="empty">Nothing matches.</p>';
+    }
+    function itemCard(item, kind, pinned) {
+      const card = document.createElement("div");
+      card.className = "column" + (pinned ? " pinned-item" : "");
+      const img = document.createElement("img");
+      img.loading = "lazy";
+      img.alt = "";
+      img.src = serverUrl(item.image || "/assets/media/icons/custom.webp");
+      const p = document.createElement("p");
+      p.textContent = item.name;
+      card.append(img, p);
+      if (item.error) { const b = document.createElement("span"); b.className = "badge"; b.textContent = "Unavailable"; card.appendChild(b); }
+      else if (item.partial) { const b = document.createElement("span"); b.className = "badge"; b.textContent = "Partial"; card.appendChild(b); }
+      if (!item.custom) {
+        const pin = document.createElement("button");
+        pin.className = "pin";
+        pin.title = pinned ? "Unpin" : "Pin";
+        pin.innerHTML = '<svg class="i"><use href="#i-pin"/></svg>';
+        pin.onclick = event => { event.stopPropagation(); togglePin(kind, item.name); };
+        card.appendChild(pin);
+      }
+      card.onclick = () => openItem(item, kind);
+      return card;
+    }
+    function togglePin(kind, name) {
+      const pins = new Set(store.json(pinsKey(kind), []));
+      if (pins.has(name)) pins.delete(name); else pins.add(name);
+      store.set(pinsKey(kind), JSON.stringify([...pins]));
+      renderList(kind);
+    }
+    function openItem(item, kind) {
+      if (item.say) alert(item.say);
+      if (item.custom) return createCustom(kind);
+      let link = item.link;
+      if (Array.isArray(item.links) && item.links.length) {
+        if (item.links.length === 1) link = item.links[0].url;
+        else {
+          const options = item.links.map((l, i) => `${i + 1}: ${l.name}`).join("\n");
+          const choice = Number.parseInt(prompt(`Select a link by entering the corresponding number:\n${options}`), 10) - 1;
+          if (Number.isNaN(choice) || choice < 0 || choice >= item.links.length) { if (!Number.isNaN(choice)) alert("Invalid selection. Please try again."); return; }
+          link = item.links[choice].url;
+        }
+      }
+      if (!link) { if (!item.say) alert("This item is not available on this server."); return; }
+      if (!ensureServer()) return;
+      const engine = item.dy ? "dy" : undefined;
+      if (item.blank) return openPopout(link, engine);
+      openInTab(link, { engine, newTab: true });
+    }
+    function createCustom(kind) {
+      const title = prompt("Enter title for the app:");
+      const link = prompt("Enter link for the app:");
+      if (!title || !link) return;
+      const apps = store.json(customKey(kind), {}) || {};
+      apps[`custom${Object.keys(apps).length + 1}`] = { name: `[Custom] ${title}`, link, image: "/assets/media/icons/custom.webp", custom: false };
+      store.set(customKey(kind), JSON.stringify(apps));
+      renderList(kind);
+    }
+    for (const kind of ["apps", "games"]) {
+      $(`${kind}-search`).addEventListener("input", () => renderList(kind));
+      $(`${kind}-category`).addEventListener("change", () => renderList(kind));
+    }
+
+    /* ------------------------------------------------------------ */
+    /*  Tabs (each tab is a /frame shell on the server origin)        */
+    /* ------------------------------------------------------------ */
+    const tabs = [];
+    let tabSeq = 0;
+    let activeTab = null;
+    const frameContainer = $("frame-container");
+    const tabList = $("tab-list");
+    const storageWaiters = new Map();
+
+    function frameUrl(engine, url) {
+      const u = new URL(serverUrl(state.hello?.frame || "/frame"));
+      u.searchParams.set("engine", engine || currentEngine());
+      if (state.token) u.searchParams.set("token", state.token);
+      if (url) u.searchParams.set("url", url);
+      return u.toString();
+    }
+
+    class Tab {
+      constructor() {
+        this.id = ++tabSeq;
+        this.title = `New Tab ${this.id}`;
+        this.url = "";
+        this.ready = false;
+        this.queue = null;
+        this.iframe = document.createElement("iframe");
+        this.iframe.dataset.tabId = this.id;
+        this.iframe.allow = "fullscreen; autoplay; clipboard-read; clipboard-write; gamepad; microphone; camera; geolocation; encrypted-media; picture-in-picture";
+        this.iframe.src = frameUrl(currentEngine());
+        frameContainer.appendChild(this.iframe);
+        this.li = document.createElement("li");
+        this.li.dataset.tabId = this.id;
+        this.li.draggable = true;
+        this.span = document.createElement("span");
+        this.span.className = "t";
+        this.span.textContent = this.title;
+        const close = document.createElement("button");
+        close.className = "close-tab";
+        close.innerHTML = "&#10005;";
+        close.title = "Close tab";
+        close.onclick = event => { event.stopPropagation(); closeTab(this); };
+        this.li.append(this.span, close);
+        this.li.onclick = () => activateTab(this);
+        tabList.appendChild(this.li);
+      }
+      post(message) {
+        if (!this.ready && message.type !== "navigate") return;
+        try { this.iframe.contentWindow.postMessage({ source: "interstellar-client", ...message }, state.server); } catch (error) { console.warn(error); }
+      }
+      navigate(url, engine) {
+        this.url = url;
+        this.setTitle(url);
+        if (!this.ready) { this.queue = { url, engine }; return; }
+        this.post({ type: "navigate", url, engine: engine || currentEngine() });
+      }
+      setTitle(title) {
+        this.title = title && title.length > 1 ? title : "Tab";
+        this.span.textContent = this.title;
+        this.li.title = this.url || "";
+      }
+    }
+    function createTab(url, engine) {
+      const tab = new Tab();
+      tabs.push(tab);
+      activateTab(tab);
+      if (url) tab.navigate(url, engine);
+      return tab;
+    }
+    function activateTab(tab) {
+      activeTab = tab;
+      for (const t of tabs) { t.li.classList.toggle("active", t === tab); t.iframe.classList.toggle("active", t === tab); }
+      $("tab-input").value = tab.url || "";
+      tab.post({ type: "getState" });
+    }
+    function closeTab(tab) {
+      const idx = tabs.indexOf(tab);
+      if (idx === -1) return;
+      tabs.splice(idx, 1);
+      tab.li.remove();
+      tab.iframe.remove();
+      if (activeTab === tab) {
+        if (tabs.length) activateTab(tabs[Math.max(0, idx - 1)]);
+        else { activeTab = null; $("tab-input").value = ""; tabSeq = 0; }
+      }
+    }
+    function openInTab(url, { engine, newTab = true } = {}) {
+      if (!ensureServer()) return;
+      location.hash = "#/tabs";
+      const target = newTab || !activeTab ? createTab() : activeTab;
+      target.navigate(url, engine);
+      activateTab(target);
+    }
+    function tabFromSource(source) { return tabs.find(t => t.iframe.contentWindow === source); }
+
+    window.addEventListener("message", event => {
+      if (!state.server || event.origin !== state.server) return;
+      const msg = event.data;
+      if (!msg || msg.source !== "interstellar-frame") return;
+      if (msg.id && storageWaiters.has(msg.id)) { storageWaiters.get(msg.id)(msg); storageWaiters.delete(msg.id); return; }
+      const tab = tabFromSource(event.source);
+      if (!tab) return;
+      switch (msg.type) {
+        case "ready":
+          tab.ready = true;
+          if (tab.queue) { const q = tab.queue; tab.queue = null; tab.post({ type: "navigate", url: q.url, engine: q.engine || currentEngine() }); }
+          break;
+        case "state":
+          if (msg.url) tab.url = msg.url;
+          tab.setTitle(msg.title || msg.url);
+          if (tab === activeTab && document.activeElement !== $("tab-input")) $("tab-input").value = tab.url;
+          break;
+        case "open":
+          createTab(msg.url);
+          break;
+        case "error":
+          tab.setTitle(msg.code === "storage-blocked" ? "Blocked by browser" : "Engine error");
+          if (msg.code === "storage-blocked") {
+            showBanner("Your browser blocked the proxy engine inside an embedded frame. Open the page in its own tab, or load this client from the server itself.", "Open in new tab", () => window.open(msg.open, "_blank"));
+          }
+          break;
+      }
+    });
+
+    function askTab(tab, type, extra = {}) {
+      return new Promise(resolve => {
+        const id = `q${Date.now()}${Math.random()}`;
+        storageWaiters.set(id, resolve);
+        tab.post({ type, id, ...extra });
+        setTimeout(() => { if (storageWaiters.has(id)) { storageWaiters.delete(id); resolve(null); } }, 5000);
+      });
+    }
+    function readyTab() { return tabs.find(t => t.ready) || null; }
+    async function withHiddenShell(fn) {
+      const existing = readyTab();
+      if (existing) return fn(existing);
+      const tab = new Tab();
+      tab.iframe.style.display = "none";
+      tab.li.remove();
+      await new Promise(resolve => {
+        const check = event => { if (event.source === tab.iframe.contentWindow && event.data?.type === "ready") { tab.ready = true; window.removeEventListener("message", check); resolve(); } };
+        window.addEventListener("message", check);
+        setTimeout(() => { window.removeEventListener("message", check); resolve(); }, 8000);
+      });
+      try { return await fn(tab); } finally { tab.iframe.remove(); }
+    }
+
+    $("add-tab").onclick = () => { if (ensureServer()) createTab(); };
+    $("btn-home").onclick = () => { location.hash = "#/"; };
+    $("btn-back").onclick = () => activeTab?.post({ type: "back" });
+    $("btn-forward").onclick = () => activeTab?.post({ type: "forward" });
+    $("btn-reload").onclick = () => activeTab?.post({ type: "reload" });
+    $("btn-inspect").onclick = () => activeTab?.post({ type: "inspect" });
+    $("btn-fullscreen").onclick = () => {
+      if (!activeTab) return;
+      if (document.fullscreenElement) document.exitFullscreen();
+      else activeTab.iframe.requestFullscreen?.().catch(() => activeTab.post({ type: "fullscreen" }));
+    };
+    document.addEventListener("fullscreenchange", () => document.body.classList.toggle("fullscreen", Boolean(document.fullscreenElement)));
+    $("btn-popout").onclick = () => { if (activeTab?.url) openPopout(activeTab.url, currentEngine()); };
+    $("btn-tabs").onclick = () => $("tab-strip").classList.toggle("collapsed");
+    $("tab-form").addEventListener("submit", async event => {
+      event.preventDefault();
+      const value = $("tab-input").value.trim();
+      if (!value) return;
+      const url = await resolve(value);
+      if (!activeTab) createTab(url); else activeTab.navigate(url);
+      $("tab-input").blur();
+    });
+    let dragTab = null;
+    tabList.addEventListener("dragstart", e => { dragTab = e.target.closest("li"); });
+    tabList.addEventListener("dragover", e => {
+      e.preventDefault();
+      const target = e.target.closest("li");
+      if (!target || !dragTab || target === dragTab) return;
+      const kids = [...tabList.children];
+      if (kids.indexOf(target) < kids.indexOf(dragTab)) tabList.insertBefore(dragTab, target); else tabList.insertBefore(dragTab, target.nextSibling);
+    });
+    tabList.addEventListener("dragend", () => { dragTab = null; });
+
+    /* ------------------------------------------------------------ */
+    /*  about:blank cloak / popout                                    */
+    /* ------------------------------------------------------------ */
+    function decorateCloak(win) {
+      const { name, icon } = cloakValues();
+      win.document.title = name;
+      const link = win.document.createElement("link");
+      link.rel = "icon";
+      link.href = icon;
+      win.document.head.appendChild(link);
+    }
+    function openPopout(url, engine) {
+      const popup = window.open("about:blank", "_blank");
+      if (!popup) { showBanner("Popups are blocked. Allow popups for this page to open the about:blank window.", "", null); return; }
+      decorateCloak(popup);
+      const iframe = popup.document.createElement("iframe");
+      iframe.style.cssText = "position:fixed;top:0;bottom:0;left:0;right:0;border:none;outline:none;width:100%;height:100%";
+      iframe.allow = "fullscreen; autoplay; clipboard-read; clipboard-write; gamepad";
+      iframe.src = frameUrl(engine || currentEngine(), url);
+      popup.document.body.style.margin = "0";
+      popup.document.body.appendChild(iframe);
+    }
+    function openCloakedClient(auto) {
+      const popup = window.open("about:blank", "_blank");
+      if (!popup) {
+        showBanner("Please allow popups for this page so it can open in an about:blank tab and stay out of your history. You can turn this off in settings.", "Open now", () => openCloakedClient(false));
+        return false;
+      }
+      popup.name = "interstellar-cloak";
+      popup.document.open();
+      popup.document.write(PRISTINE_HTML);
+      popup.document.close();
+      decorateCloak(popup);
+      if (auto) {
+        const link = store.get("pLink") || randomUrl();
+        location.replace(link);
+      }
+      return true;
+    }
+    function randomUrl() {
+      const urls = ["https://kahoot.it", "https://classroom.google.com", "https://drive.google.com", "https://google.com", "https://docs.google.com", "https://slides.google.com", "https://www.nasa.gov", "https://blooket.com", "https://clever.com", "https://edpuzzle.com", "https://khanacademy.org", "https://wikipedia.org", "https://dictionary.com"];
+      return urls[Math.floor(Math.random() * urls.length)];
+    }
+    if (IS_CLOAK_WINDOW) {
+      window.onbeforeunload = event => { event.returnValue = "Leave Site?"; return "Leave Site?"; };
+    }
+
+    /* ------------------------------------------------------------ */
+    /*  Settings bindings                                            */
+    /* ------------------------------------------------------------ */
+    function initSettings() {
+      $("server-input").value = state.server;
+      if (store.get("ab") === null) store.set("ab", "true");
+      $("ab-settings-switch").checked = store.get("ab") === "true";
+      $("ab-settings-switch").onchange = e => store.set("ab", e.target.checked ? "true" : "false");
+      $("ab-open").onclick = () => openCloakedClient(false);
+
+      $("eventKeyInput").value = store.get("eventKeyRaw", "`");
+      $("linkInput").value = store.get("pLink", "https://classroom.google.com/");
+      $("save-panic").onclick = () => {
+        const raw = $("eventKeyInput").value;
+        store.set("eventKey", JSON.stringify(raw.split(",")));
+        store.set("eventKeyRaw", raw);
+        store.set("pLink", $("linkInput").value);
+        alert("Saved.");
+      };
+
+      const dropdown = $("cloak-dropdown");
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "Default";
+      dropdown.appendChild(opt);
+      for (const key of Object.keys(CLOAKS).sort((a, b) => a.localeCompare(b))) {
+        const o = document.createElement("option");
+        o.value = key;
+        o.textContent = key;
+        dropdown.appendChild(o);
+      }
+      dropdown.value = CLOAKS[store.get("selectedOption", "")] ? store.get("selectedOption") : "";
+      dropdown.onchange = () => { store.remove("CustomName"); store.remove("CustomIcon"); $("cloak-name").value = ""; $("cloak-icon").value = ""; store.set("selectedOption", dropdown.value); applyCloak(); };
+      $("cloak-name").value = store.get("CustomName", "");
+      $("cloak-icon").value = store.get("CustomIcon", "");
+      $("cloak-save").onclick = () => {
+        if ($("cloak-name").value) store.set("CustomName", $("cloak-name").value); else store.remove("CustomName");
+        if ($("cloak-icon").value) store.set("CustomIcon", $("cloak-icon").value); else store.remove("CustomIcon");
+        applyCloak();
+      };
+      $("cloak-reset").onclick = () => { store.remove("CustomName"); store.remove("CustomIcon"); store.remove("selectedOption"); $("cloak-name").value = ""; $("cloak-icon").value = ""; dropdown.value = ""; applyCloak(); };
+
+      $("background-input").value = store.get("backgroundImage", "");
+      $("bg-save").onclick = () => { const v = $("background-input").value.trim(); if (v) store.set("backgroundImage", v); else store.remove("backgroundImage"); applyServerAssets(); };
+      $("bg-reset").onclick = () => { store.remove("backgroundImage"); $("background-input").value = ""; applyServerAssets(); };
+
+      const engine = $("engine");
+      for (const name of Object.keys(SEARCH_ENGINES)) { const o = document.createElement("option"); o.value = name; o.textContent = name === "Brave" ? "Brave (Default)" : name; engine.appendChild(o); }
+      const customOpt = document.createElement("option"); customOpt.value = "Custom"; customOpt.textContent = "Custom"; engine.appendChild(customOpt);
+      engine.value = store.get("enginename", "Brave");
+      engine.onchange = () => { if (SEARCH_ENGINES[engine.value]) { store.set("engine", SEARCH_ENGINES[engine.value]); store.set("enginename", engine.value); } };
+      $("engine-form").value = store.get("enginename") === "Custom" ? store.get("engine", "") : "";
+      $("engine-save").onclick = () => { const v = $("engine-form").value.trim(); if (!v) return alert("Please enter a custom search engine value."); store.set("engine", v); store.set("enginename", "Custom"); engine.value = "Custom"; };
+
+      $("pChange").value = currentEngine();
+      $("pChange").onchange = e => store.set("pchoice", e.target.value);
+
+      $("particles-switch").onchange = e => { store.set("Particles", e.target.checked ? "true" : "false"); applyParticles(); };
+      $("theme-dropdown").onchange = e => { store.set("theme", e.target.value); applyTheme(); };
+
+      $("export-save").onclick = async () => {
+        const local = store.all();
+        let remote = null;
+        if (state.server && state.authed) remote = await withHiddenShell(tab => askTab(tab, "exportStorage")).catch(() => null);
+        const data = { cookies: remote?.data?.cookies || {}, localStorage: { ...(remote?.data?.localStorage || {}), ...local } };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "save_data.json";
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(a.href);
+      };
+      $("import-save").onclick = () => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "application/json";
+        input.onchange = () => {
+          const file = input.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = async e => {
+            try {
+              const data = JSON.parse(e.target.result);
+              if (data.localStorage) for (const [k, v] of Object.entries(data.localStorage)) store.set(k, v);
+              if (state.server && state.authed) await withHiddenShell(tab => askTab(tab, "importStorage", { data })).catch(() => null);
+              alert("Save data imported successfully. Reloading.");
+              location.reload();
+            } catch (error) { alert(`Failed to import save data: ${error.message}`); }
+          };
+          reader.readAsText(file);
+        };
+        input.click();
+      };
+    }
+
+    /* ------------------------------------------------------------ */
+    /*  Boot                                                         */
+    /* ------------------------------------------------------------ */
+    state.server = detectServer();
+    state.token = store.get("is_token") || null;
+    initSettings();
+    applyTheme();
+    applyParticles();
+    applyCloak();
+    route();
+
+    if (state.server) connectTo(state.server); else openConnectModal();
+
+    // Auto about:blank cloak on startup (matches upstream: skipped on Firefox and when already cloaked / embedded).
+    let inFrame = false;
+    try { inFrame = window !== window.top; } catch { inFrame = true; }
+    if (!inFrame && !IS_CLOAK_WINDOW && !navigator.userAgent.includes("Firefox") && store.get("ab") === "true" && !new URLSearchParams(location.search).has("nocloak")) {
+      setTimeout(() => openCloakedClient(true), 2000);
+    }
+  })();
+  </script>
+</body>
+</html>

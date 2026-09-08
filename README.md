@@ -1,1 +1,137 @@
-# Empty-Template
+<div align="center">
+  <h1>Interstellar (WebSocket edition)</h1>
+  <p>A fork of <a href="https://github.com/UseInterstellar/Interstellar">UseInterstellar/Interstellar</a> where the whole frontend is <strong>one HTML file</strong> that connects to the proxy server over a <strong>WebSocket</strong>.</p>
+</div>
+
+Open `client/interstellar.html` from your disk, from a USB stick, from GitHub Pages, from anywhere. Point it at a running server and you get the full Interstellar experience: search bar, games, apps, tabbed browsing, inspect element, tab cloaking, about:blank cloaking, themes, panic key, save import/export, and all three proxy engines (Scramjet, Ultraviolet, Dynamic).
+
+## How it works
+
+```
+┌──────────────────────────────┐        control WebSocket (/ws)         ┌──────────────────────────────┐
+│  client/interstellar.html    │ ─────────────────────────────────────▶ │  Node server (index.js)       │
+│  file:// or any static host  │  hello · auth · list apps/games ·      │  express + ws + wisp + bare   │
+│                              │  resolve URL · ping                    │                              │
+│  ┌────────────────────────┐  │                                        │  /frame  ← frame shell        │
+│  │ <iframe> per tab       │◀─┼──── postMessage bridge ───────────────▶│  /sw.js  ← Scramjet/UV worker │
+│  │ src = server/frame     │  │  navigate · back · forward · reload ·  │  /wisp/  ← transport socket   │
+│  │  └ <iframe> proxied    │  │  inspect · title/url · window.open     │  /ca/    ← bare server        │
+│  └────────────────────────┘  │                                        │  /e/     ← game assets        │
+└──────────────────────────────┘                                        └──────────────────────────────┘
+```
+
+- **The HTML file is pure UI.** It has no dependency on the server's static pages. Its only link to the server is the control WebSocket at `/ws` and the frames it embeds.
+- **The control WebSocket** (`/ws`) is a small JSON request/response protocol: `hello`, `auth`, `list` (apps or games), `resolve` (turn typed text into a URL using the chosen search engine), `ping`. It also carries password authentication and returns a session token.
+- **Proxied pages need a service worker**, and a service worker can only be registered by a page on the server's own origin. So each tab embeds `server/frame`, a tiny "frame shell" page on the server that registers the worker, wires the bare-mux transport to the wisp WebSocket, and hosts the proxied page in an inner frame. The HTML client drives it with `postMessage`, which is how back/forward/reload/inspect-element/tab-titles keep working exactly like upstream even though the UI lives on another origin.
+- **The proxy transport itself is a WebSocket too** (wisp), the same one upstream Interstellar uses.
+
+Everything from upstream is still there: the classic multi-page UI is served at `/legacy`, `/a`, `/b`, `/c`, `/d` and the proxy engines, game assets, and asset cache are untouched.
+
+## Quick start
+
+```bash
+git clone -b claude/interstellar-websocket-html-vwqd4z https://github.com/frankfurt-debug/empty-template interstellar
+cd interstellar
+npm install
+npm start          # http://localhost:8080
+```
+
+Then either:
+
+1. Open `http://localhost:8080/` in a browser (the server serves the same HTML file at `/`), or
+2. Open `client/interstellar.html` straight from your disk. On first load it asks for the server address: enter `http://localhost:8080`.
+
+You can also pass the server in the URL (`interstellar.html?server=https://my-proxy.example.com`) or download the file from any running server at `/client.html?download`.
+
+### Running the HTML file somewhere else
+
+| Where the HTML file is opened | Server address must be | Notes |
+| --- | --- | --- |
+| `file://` (double-clicked from disk) | `http://localhost:…` or `https://…` | Works in Chrome/Edge/Firefox. Origin is `null`, keep `null` or `*` in `ALLOWED_ORIGINS`. |
+| GitHub Pages / Netlify / any `https://` static host | `https://…` only | Browsers block insecure `ws://` from secure pages. |
+| Served by the proxy server itself (`/`) | same origin, auto-detected | Most compatible option in every browser. |
+
+The proxy engine runs inside an embedded frame from another site, which some browsers restrict (Safari, Firefox "strict" tracking protection, Chrome with third-party cookies blocked). The frame then shows an **Open in a new tab** button, and the toolbar's pop-out button opens the page in an about:blank window. Loading the client from the server's own address avoids the restriction entirely.
+
+## Password protection
+
+Set `challenge: true` in `config.js`, or start with `CHALLENGE=true npm start` (upstream's `config=true npm start` works too). Users and passwords live in `config.js`; `PASSWORD=...` overrides the default user's password.
+
+When protection is on:
+
+- the HTML client asks for a username and password and receives a signed session token over the WebSocket;
+- `/frame`, the wisp transport socket and the control socket all require that token (or the classic basic-auth login for the `/legacy` UI);
+- engine files, icons and game assets stay public because they contain nothing secret and the service worker must fetch them without credentials.
+
+Set `SESSION_SECRET` so tokens survive a restart.
+
+## Configuration
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `PORT` | `8080` | Listen port. |
+| `CHALLENGE` / `config` | `false` | Enable password protection. |
+| `PASSWORD` | `password` | Password for the default `interstellar` user. |
+| `SESSION_SECRET` | random per boot | HMAC secret for session tokens. |
+| `ALLOWED_ORIGINS` | `*` | Comma-separated page origins allowed to open `/ws`. Use `null` for `file://` pages and about:blank windows, e.g. `https://me.github.io,null`. |
+
+See `.env.example`.
+
+## Hosting
+
+The **server** needs a real Node.js process with WebSocket support. That rules out serverless/static platforms for the backend: Vercel, Netlify, Cloudflare Pages, and GitHub Pages cannot run it (upstream's `vercel.json` has been removed for that reason). Those platforms *can* host the HTML file itself, pointed at a server hosted elsewhere.
+
+The server also needs **HTTPS** in production. Service workers only run on `https://` (or `http://localhost`), and every host below gives you a TLS certificate automatically.
+
+### Can I use Replit?
+
+Technically yes: Replit runs Node.js and WebSockets, and a `.replit` file is included. Two caveats before you do:
+
+- **Policy.** Replit's own help centre says that using Replit as a proxy to get around school or parental filters violates their terms, and that they shut such repls down both automatically and by hand. If that is your use case, expect it to be taken down. See [Replit's legal and security docs](https://docs.replit.com/category/legal-and-security).
+- **Cost.** Replit stopped free always-on hosting in January 2024. A repl on the free plan only runs while you have the editor open; a stable URL needs a paid Deployment.
+
+### Better options
+
+| Host | Free tier | Notes |
+| --- | --- | --- |
+| [Render](https://render.com) | Yes, 750 instance-hours per month, sleeps after 15 min idle (about a minute to wake) | WebSockets work on the free instance. `render.yaml` is included; connect the repo and it deploys the Dockerfile. |
+| [Koyeb](https://www.koyeb.com) | Yes, one free nano instance that scales to zero | Runs Node and WebSockets. Use the deploy button below or point a new service at this repo (Dockerfile is auto-detected). |
+| [Railway](https://railway.com) | Trial credit, then usage-based (roughly $5/month for a small service) | WebSockets on all plans. Auto-detects the Dockerfile. |
+| [Fly.io](https://fly.io) | Pay as you go, card required | `fly.toml` included: `fly launch --copy-config && fly deploy`. Scales to zero when idle. |
+| [Heroku](https://heroku.com) | No (Eco dynos are about $5/month) | `app.json` included for the deploy button. |
+| GitHub Codespaces | 60 core-hours per month on personal accounts | Run `npm i && npm start`, set the forwarded port's visibility to **Public**. Same steps as upstream. |
+| Any VPS (Oracle Cloud Always Free, Hetzner, DigitalOcean, a Raspberry Pi at home) | Depends | `docker build -t interstellar . && docker run -p 8080:8080 interstellar`, put Caddy or a Cloudflare Tunnel in front for HTTPS. |
+
+<a target="_blank" href="https://render.com/deploy?repo=https://github.com/frankfurt-debug/empty-template"><img alt="Deploy to Render" src="https://render.com/images/deploy-to-render-button.svg" height="32"></a>
+<a target="_blank" href="https://app.koyeb.com/deploy?type=git&repository=github.com/frankfurt-debug/empty-template&branch=claude/interstellar-websocket-html-vwqd4z"><img alt="Deploy to Koyeb" src="https://www.koyeb.com/static/images/deploy/button.svg" height="32"></a>
+<a target="_blank" href="https://heroku.com/deploy/?template=https://github.com/frankfurt-debug/empty-template"><img alt="Deploy to Heroku" src="https://www.herokucdn.com/deploy/button.svg" height="32"></a>
+
+Hosts that have shut down or no longer suit this: Glitch ended app hosting in 2025, Cyclic closed in 2024, and Vercel/Netlify functions cannot hold a WebSocket open.
+
+Whatever you pick, check the host's acceptable-use policy. Several platforms treat web proxies and "unblockers" as prohibited content and will remove them.
+
+## Project layout
+
+| Path | What it is |
+| --- | --- |
+| `client/interstellar.html` | The standalone frontend. Single file, no build step, no CDN dependencies. Also served at `/` and `/client.html`. |
+| `static/frame.html` | The frame shell served at `/frame`: registers the service worker, sets up the transport, hosts one proxied page, exposes the postMessage API. |
+| `index.js` | Upstream server plus the `/ws` control socket, `/frame` route, token auth and origin policy. |
+| `config.js` | Password protection settings (also driven by env). |
+| `static/` | Upstream's classic UI, proxy engine bundles, icons, game/app lists. |
+
+### Control socket protocol
+
+Every request is `{ "id": "...", "type": "...", ...fields }` and every reply is `{ "id": "...", "ok": true, ...data }` or `{ "id": "...", "ok": false, "error": "...", "code": "..." }`. The server sends `{ "type": "hello", ... }` on connect.
+
+| Type | Fields | Reply |
+| --- | --- | --- |
+| `hello` | | server name, version, `challenge`, engines, search engines, `frame` path |
+| `auth` | `username`+`password` or `token` | `token`, `user` |
+| `list` | `kind`: `apps` or `games` | `items` (same JSON as upstream's `a.json`/`g.json`) |
+| `resolve` | `input`, `engine` (name or URL) | `url` |
+| `ping` | | `pong`, `time` |
+
+## Credits and license
+
+All proxy engines, the classic UI, icons, and the app/game catalogue come from [Interstellar](https://github.com/UseInterstellar/Interstellar) and its contributors. This fork keeps their GPL-3.0-or-later license (see `LICENSE`). If you use this, consider starring the original repository.

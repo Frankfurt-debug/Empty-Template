@@ -1,0 +1,14 @@
+# Replit configuration. Read the "Hosting" section of README.md first:
+# Replit's own help docs say repls used as proxies to bypass school or
+# parental filters are taken down, and a stable URL needs a paid Deployment.
+run = "npm start"
+entrypoint = "index.js"
+modules = ["nodejs-22"]
+
+[deployment]
+run = ["sh", "-c", "npm start"]
+deploymentTarget = "cloudrun"
+
+[[ports]]
+localPort = 8080
+externalPort = 80
