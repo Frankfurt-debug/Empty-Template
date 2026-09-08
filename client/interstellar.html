@@ -98,7 +98,7 @@
 
     /* Home */
     #view-home { min-height: calc(100vh - 60px); text-align: center; padding: 0 1rem 4rem; }
-    .title { font-size: 10vh; text-transform: uppercase; margin: 22vh 0 1vh; transition: .35s ease; text-shadow: 2px 4px 6px rgba(0,0,0,.2); font-weight: 300; letter-spacing: .02em; }
+    .title { font-size: 10vh; margin: 22vh 0 1vh; transition: .35s ease; text-shadow: 2px 4px 6px rgba(0,0,0,.2); font-weight: 300; letter-spacing: .02em; }
     .title:hover { transform: translateY(-5%) scale(1.03); font-weight: 800; }
     @media (orientation: portrait) { .title { font-size: 11vw; margin-top: 18vh; } }
     #splash { margin: 0 0 3vh; opacity: .8; cursor: pointer; user-select: none; }
@@ -190,20 +190,20 @@
   <canvas id="particles" hidden></canvas>
 
   <header class="f-nav" id="f-nav">
-    <a class="icon" href="#/"><img id="INImg" alt="" src="data:," /><span>Interstellar</span></a>
+    <a class="icon" href="#/"><img id="INImg" alt="" src="data:," /><span id="site-word">Home</span></a>
     <nav class="f-nav-right">
       <a href="#/games" data-view="games"><svg class="i"><use href="#i-gamepad"/></svg>Games</a>
       <a href="#/apps" data-view="apps"><svg class="i"><use href="#i-phone"/></svg>Apps</a>
       <a href="#/tabs" data-view="tabs"><svg class="i"><use href="#i-laptop"/></svg>Tabs</a>
       <a href="#/settings" data-view="settings"><svg class="i"><use href="#i-gear"/></svg>Settings</a>
-      <span class="conn" id="conn" data-state="offline" title="Connection to the proxy server"><span class="dot"></span><span id="conn-text">Not connected</span></span>
+      <span class="conn" id="conn" data-state="offline" title="Server connection"><span class="dot"></span><span id="conn-text">Offline</span></span>
     </nav>
   </header>
 
   <main>
     <section id="view-home" class="view">
-      <h1 class="title">Interstellar</h1>
-      <p id="splash"></p>
+      <h1 class="title" id="site-title">Home</h1>
+      <p id="splash" hidden></p>
       <div class="search-container">
         <form id="fv">
           <input id="input" class="truncate" placeholder="Search or enter a URL" type="text" autocomplete="off" />
@@ -254,8 +254,8 @@
     <section id="view-settings" class="view">
       <div class="settings-container">
         <div class="settings-card" id="card-server">
-          <h3>Proxy Server</h3>
-          <p>This file is only the frontend. It connects to an Interstellar server over a WebSocket, and proxied pages are rendered by that server.</p>
+          <h3>Server</h3>
+          <p>This file is only the frontend. It connects to your server over a WebSocket, and pages are loaded through that server.</p>
           <input class="key-form" type="url" id="server-input" placeholder="https://your-server.example.com" autocomplete="off" />
           <div class="row" id="server-auth-row" hidden>
             <input class="key-form" type="text" id="server-user" placeholder="Username" autocomplete="username" style="flex:1" />
@@ -265,6 +265,18 @@
           <button class="key-button" id="server-download">Download this file</button>
           <div class="status-line" id="server-status">Not connected.</div>
           <p class="small" style="margin-top:.6rem">If this file is opened from an <code>https://</code> address the server must also be <code>https://</code> (the browser refuses insecure WebSockets from secure pages). Opened from your disk (<code>file://</code>) it can talk to <code>http://localhost</code> too.</p>
+        </div>
+
+        <div class="settings-card">
+          <h3>Appearance</h3>
+          <p>The name shown in the header and on the home screen. This is what someone glancing at your screen reads, so pick something unremarkable.</p>
+          <input class="key-form" type="text" id="site-name" placeholder="Home" maxlength="40" />
+          <button class="key-button save" id="site-name-save">Save</button>
+          <button class="key-button reset" id="site-name-reset">Reset</button>
+          <div class="row" style="margin-top:.8rem">
+            <label class="switch"><input type="checkbox" id="splash-switch" /><span class="slider-round"></span></label>
+            <span>Show the line under the title</span>
+          </div>
         </div>
 
         <div class="settings-card">
@@ -311,8 +323,8 @@
         </div>
 
         <div class="settings-card">
-          <h3>Choose your Proxy</h3>
-          <p>Choose the proxy engine you want to use for new pages.</p>
+          <h3>Page Engine</h3>
+          <p>Which engine renders pages you open. Change this if a site misbehaves.</p>
           <select id="pChange">
             <option value="sj">Scramjet (Default)</option>
             <option value="uv">Ultraviolet (Legacy)</option>
@@ -344,7 +356,7 @@
 
         <div class="settings-card">
           <h3>Save Data Management</h3>
-          <p>Export your saved data (settings here plus game saves stored on the proxy server origin) and import it on another site or device.</p>
+          <p>Export your saved data (the settings here plus game saves held by the server) and import it on another device.</p>
           <p id="warning">Importing a save file will overwrite your current saves!</p>
           <button class="key-button export" id="export-save">Export Save</button>
           <button class="key-button import" id="import-save">Import Save</button>
@@ -362,8 +374,8 @@
 
   <div class="modal" id="connect-modal" hidden>
     <div class="settings-card">
-      <h2>Connect to a server</h2>
-      <p id="connect-modal-text">Enter the address of your Interstellar server.</p>
+      <h2>Connect</h2>
+      <p id="connect-modal-text">Enter your server address.</p>
       <input class="key-form" type="url" id="modal-server" placeholder="https://your-server.example.com" autocomplete="off" />
       <div id="modal-auth" hidden>
         <input class="key-form" type="text" id="modal-user" placeholder="Username" autocomplete="username" />
@@ -547,9 +559,9 @@
       if ($("modal-status")) $("modal-status").textContent = text;
     }
     control.onState = (s, reason) => {
-      if (s === "online") setConn("online", state.hello ? `Connected` : "Connected");
+      if (s === "online") setConn("online", "Connected");
       else if (s === "connecting") setConn("connecting", "Connecting…");
-      else setConn("offline", reason ? `Offline: ${reason}` : "Not connected");
+      else setConn("offline", reason ? `Offline: ${reason}` : "Offline");
     };
     control.onHello = async hello => {
       state.hello = hello;
@@ -569,12 +581,12 @@
             catch { store.remove("is_creds"); }
           }
         }
-        if (!state.token) { openConnectModal("This server needs a username and password."); setConn("online", "Connected – sign in required"); return; }
+        if (!state.token) { openConnectModal("This server needs a username and password."); setConn("online", "Sign in required"); return; }
       } else if (hello.challenge && hello.authed && !state.token) {
         try { const r = await control.request("auth", { token: store.get("is_token") }); state.token = r.token; } catch {}
       }
       state.authed = true;
-      setConn("online", `Connected to ${hello.name} v${hello.version}`);
+      setConn("online", "Connected");
       closeConnectModal();
       applyServerAssets();
       loadLists();
@@ -586,7 +598,7 @@
       store.set("is_token", r.token || "");
       store.set("is_creds", JSON.stringify({ username, password }));
       state.authed = true;
-      setConn("online", `Connected as ${r.user}`);
+      setConn("online", "Connected");
       applyServerAssets();
       loadLists();
     }
@@ -610,7 +622,7 @@
     /*  Connect modal / banner                                       */
     /* ------------------------------------------------------------ */
     function openConnectModal(text) {
-      $("connect-modal-text").textContent = text || "Enter the address of your Interstellar server.";
+      $("connect-modal-text").textContent = text || "Enter your server address.";
       $("modal-server").value = state.server;
       $("connect-modal").hidden = false;
       setTimeout(() => ($("modal-auth").hidden ? $("modal-server") : $("modal-user")).focus(), 50);
@@ -637,7 +649,7 @@
       if (state.server) window.open(serverUrl("/client.html?download"), "_blank");
       else alert("Connect to a server first.");
     };
-    $("conn").onclick = () => openConnectModal(control.online ? "Connected. Change the server or sign in below." : "Enter the address of your Interstellar server.");
+    $("conn").onclick = () => openConnectModal(control.online ? "Connected. Change the server or sign in below." : "Enter your server address.");
 
     let bannerAction = null;
     function showBanner(text, actionLabel, action) {
@@ -667,7 +679,6 @@
       if (custom) bg = `url("${custom.replace(/"/g, '%22')}")`;
       else if (state.server && !themed) bg = `url("${serverUrl(inverted ? "/assets/media/background/full-inverted.png" : "/assets/media/background/full-main.png")}")`;
       document.documentElement.style.setProperty("--background-image", bg);
-      $("INImg").src = state.server ? serverUrl(inverted ? "/assets/media/favicon/main-inverted.png" : "/assets/media/favicon/main.png") : "data:,";
       applyCloak();
     }
     function cloakValues() {
@@ -678,10 +689,27 @@
       if (store.get("CustomIcon")) icon = store.get("CustomIcon");
       return { name, icon: icon || "data:," };
     }
+    function applySiteName() {
+      const name = (store.get("siteName", "") || "Home").trim() || "Home";
+      $("site-title").textContent = name;
+      $("site-word").textContent = name;
+    }
+
+    function applySplash() {
+      const on = store.get("splash") === "true";
+      $("splash").hidden = !on;
+      $("splash-switch").checked = on;
+    }
+
     function applyCloak() {
       const { name, icon } = cloakValues();
       document.title = name;
       $("tab-favicon").href = icon;
+      // The header shows an icon only when one has been chosen, so the default
+      // header is the site name on its own rather than any stock logo.
+      const chosenIcon = store.get("CustomIcon") || (CLOAKS[store.get("selectedOption", "")] ? icon : "");
+      $("INImg").hidden = !chosenIcon;
+      if (chosenIcon) $("INImg").src = chosenIcon;
       store.set("name", name);
       store.set("icon", icon);
     }
@@ -780,8 +808,8 @@
     /*  Home                                                         */
     /* ------------------------------------------------------------ */
     const SPLASH = [
-      "Runs from a single HTML file", "Connected over WebSocket", "Fastest growing proxy server", "Check out discord.gg/interstellar :)",
-      "Thanks for using the site", "Check out the settings page", "Open this file from anywhere", "Made with Interstellar",
+      "Welcome back", "Everything in one place", "Check out the settings page", "Pick a theme you like",
+      "Pin the things you use most", "Hello!",
     ];
     let splashIndex = Math.floor(Math.random() * SPLASH.length);
     $("splash").textContent = SPLASH[splashIndex];
@@ -796,7 +824,7 @@
       $("input").value = "";
     });
     function ensureServer() {
-      if (!state.server) { openConnectModal("Enter the address of your Interstellar server first."); return false; }
+      if (!state.server) { openConnectModal("Enter your server address first."); return false; }
       if (state.hello?.challenge && !state.authed) { openConnectModal("Sign in to this server first."); return false; }
       return true;
     }
@@ -812,7 +840,7 @@
       renderList("apps");
       renderList("games");
       const view = currentView();
-      if (view === "home") $("home-hint").textContent = state.lists.games ? `${state.lists.games.length} games · ${state.lists.apps?.length || 0} apps ready` : "";
+      if (view === "home") $("home-hint").textContent = "";
     }
     function customKey(kind) { return kind === "games" ? "Gcustom" : "Acustom"; }
     function pinsKey(kind) { return `is_pins_${kind}`; }
@@ -1046,9 +1074,9 @@
           createTab(msg.url);
           break;
         case "error":
-          tab.setTitle(msg.code === "storage-blocked" ? "Blocked by browser" : "Engine error");
+          tab.setTitle(msg.code === "storage-blocked" ? "Blocked by browser" : "Load error");
           if (msg.code === "storage-blocked") {
-            showBanner("Your browser blocked the proxy engine inside an embedded frame. Open the page in its own tab, or load this client from the server itself.", "Open in new tab", () => window.open(msg.open, "_blank"));
+            showBanner("Your browser blocked this page from loading inside the frame. Open it in its own tab, or load this file from the server itself.", "Open in new tab", () => window.open(msg.open, "_blank"));
           }
           break;
       }
@@ -1163,6 +1191,15 @@
     function initSettings() {
       $("server-input").value = state.server;
       if (store.get("ab") === null) store.set("ab", "true");
+      $("site-name").value = store.get("siteName", "");
+      $("site-name-save").onclick = () => {
+        const v = $("site-name").value.trim();
+        if (v) store.set("siteName", v); else store.remove("siteName");
+        applySiteName();
+      };
+      $("site-name-reset").onclick = () => { store.remove("siteName"); $("site-name").value = ""; applySiteName(); };
+      $("splash-switch").onchange = e => { store.set("splash", e.target.checked ? "true" : "false"); applySplash(); };
+
       $("ab-settings-switch").checked = store.get("ab") === "true";
       $("ab-settings-switch").onchange = e => store.set("ab", e.target.checked ? "true" : "false");
       $("ab-open").onclick = () => openCloakedClient(false);
@@ -1258,6 +1295,8 @@
     state.server = detectServer();
     state.token = store.get("is_token") || null;
     initSettings();
+    applySiteName();
+    applySplash();
     applyTheme();
     applyParticles();
     applyCloak();

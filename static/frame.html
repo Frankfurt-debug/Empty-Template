@@ -22,7 +22,7 @@
   <div id="status">
     <div>
       <div class="spinner" id="spinner"></div>
-      <h2 id="status-title">Starting proxy engine…</h2>
+      <h2 id="status-title">Loading…</h2>
       <p id="status-text"></p>
       <div id="status-actions"></div>
     </div>
@@ -100,7 +100,7 @@
       async function boot() {
         try {
           if (!("serviceWorker" in navigator)) {
-            throw new Error("Service workers are not available here (this needs HTTPS, or http://localhost).");
+            throw new Error("This browser context does not allow background workers (needs HTTPS, or http://localhost).");
           }
           const sjConfig = {
             prefix: "/a/sj/",
@@ -169,9 +169,9 @@
           }
           actions.push({ label: "Open in a new tab", href: topLevelUrl() });
           showStatus(
-            blocked ? "Your browser blocked the proxy engine inside this frame" : "Proxy engine failed to start",
+            blocked ? "Your browser blocked this page from loading here" : "This page didn't load",
             blocked
-              ? "Some browsers (Safari, Firefox strict mode, or Chrome with third-party cookies blocked) refuse to run a service worker inside an embedded frame from another site. Grant storage access, open this page in its own tab, or load the client from the proxy server itself."
+              ? "Some browsers (Safari, Firefox strict mode, or Chrome with third-party cookies blocked) refuse to run a background worker inside a frame embedded from another site. Grant storage access, open this page in its own tab, or load the client from the server itself."
               : String(error.message || error),
             actions,
           );
@@ -224,7 +224,7 @@
           return;
         }
         const url = decode(href);
-        const key = `${title} ${url}`;
+        const key = `${title} ${url}`;
         if (!force && key === lastState) return;
         lastState = key;
         post({ type: "state", url, title, loading: false });

@@ -53,6 +53,21 @@ You can also pass the server in the URL (`interstellar.html?server=https://my-pr
 
 The proxy engine runs inside an embedded frame from another site, which some browsers restrict (Safari, Firefox "strict" tracking protection, Chrome with third-party cookies blocked). The frame then shows an **Open in a new tab** button, and the toolbar's pop-out button opens the page in an about:blank window. Loading the client from the server's own address avoids the restriction entirely.
 
+## Appearance, and what it does not hide
+
+Settings → **Appearance** sets the name shown in the header and on the home screen (default "Home"), and the line under the title is off by default. The header icon is shown only when you pick one in the Tab Cloaker, so the default header is just a name. Nothing in the interface advertises what it is.
+
+That covers someone glancing at your screen. It does not make the traffic anonymous, and it is worth being clear about what still identifies this as a proxy:
+
+- The browser's own address bar shows your server's domain, and the path contains the destination — Scramjet uses `/a/sj/https%3A%2F%2Fexample.com%2F`, which is plain percent-encoding, not obfuscation.
+- Every request in the session resolves to your one host. DNS lookups, TLS SNI and any network log show your domain and never the sites themselves. That is exactly how the filter is bypassed and exactly how a network monitor recognises it.
+- Sites see the server's IP address, not yours. Datacenter IP ranges get flagged: expect CAPTCHAs, "unusual sign-in location" mail, and outright blocks from Cloudflare-protected and Google properties.
+- Inside a proxied page, Scramjet leaves about sixteen `$scramjet*` properties on `window`, and a service worker is registered under `/a/`. Both are visible in devtools, and a site that cares to look can find them.
+
+Scramjet does emulate the things a page checks casually: a page's own scripts see the real `location`, `document.domain` and `window.top === window.self`.
+
+Use this on networks where you are allowed to.
+
 ## Password protection
 
 Set `challenge: true` in `config.js`, or start with `CHALLENGE=true npm start` (upstream's `config=true npm start` works too). Users and passwords live in `config.js`; `PASSWORD=...` overrides the default user's password.
