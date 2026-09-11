@@ -239,6 +239,19 @@
         return inner.dataset.tabUrl || null;
       }
 
+      // Turn whatever a page hands us into the real site URL: decode it when the
+      // engine already rewrote it, otherwise resolve it against the page.
+      function realUrl(raw) {
+        const value = String(raw || "");
+        try {
+          const parsed = new URL(value, location.href);
+          if (parsed.origin === location.origin && /^\/a\//.test(parsed.pathname)) return decode(parsed.href);
+        } catch {
+          /* fall through to a plain resolve */
+        }
+        return absolute(value);
+      }
+
       function absolute(url) {
         const raw = String(url);
         const base = currentRealUrl();
@@ -258,9 +271,26 @@
           // like "/game/xyz". Resolve it against the site being viewed and hand
           // it to the client as a new tab.
           win.open = url => {
-            if (url) post({ type: "open", url: absolute(url) });
+            if (url) post({ type: "open", url: realUrl(url) });
             return null;
           };
+
+          // The sandbox has no allow-popups, so the browser silently refuses to
+          // open target="_blank" links and the click appears to do nothing.
+          // Catch those and turn them into a tab in the client instead.
+          const doc = inner.contentDocument;
+          if (doc && !doc.__isClickHooked) {
+            doc.__isClickHooked = true;
+            doc.addEventListener("click", event => {
+              const link = event.target && event.target.closest ? event.target.closest("a[href]") : null;
+              if (!link) return;
+              if (link.hasAttribute("download")) return;   // let downloads run normally
+              const how = (link.getAttribute("target") || "").toLowerCase();
+              if (how !== "_blank" && how !== "_new") return;
+              event.preventDefault();
+              post({ type: "open", url: realUrl(link.href) });
+            }, true);
+          }
         } catch {
           /* cross-origin content (should not happen, but be safe) */
         }
